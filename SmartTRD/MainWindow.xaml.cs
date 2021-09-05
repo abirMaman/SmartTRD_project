@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartTRD.IBclient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,10 @@ namespace SmartTRD
         public MainWindow()
         {
             InitializeComponent();
+            iBclientCon con = new iBclientCon();
+            con.Init();
+
+            con.connectToIbClientTWS("127.0.0.1", 7497, 1);
         }
     }
 }
