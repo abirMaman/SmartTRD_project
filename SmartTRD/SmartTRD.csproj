@@ -38,6 +38,9 @@
     <Reference Include="CSharpAPI">
       <HintPath>..\..\..\..\..\..\TWS API\source\CSharpClient\client\bin\Debug\net45\CSharpAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -59,8 +62,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Algo\AlgoTrd.cs" />
+    <Compile Include="DB\iStockScannerDB.cs" />
     <Compile Include="DB\StockScannerDB.cs" />
+    <Compile Include="Http\HttpOtcMarket.cs" />
+    <Compile Include="JsonAnalyzer\JsonStkInfo.cs" />
+    <Compile Include="Scanner\iScannerMng.cs" />
+    <Compile Include="Scanner\ScannerMng.cs" />
+    <Compile Include="Scanner\ScannerMngDB.cs" />
     <Compile Include="Wrapper\EWrapperImpl.cs" />
+    <Compile Include="XML\XmlHandler.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -70,7 +80,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="IBclient\iBclient.cs" />
-    <Compile Include="IBclient\iBclientCon.cs" />
+    <Compile Include="IBclient\BclientCon.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -94,6 +104,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -102,5 +113,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

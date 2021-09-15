@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IBApi;
+using SmartTRD.DB;
+using SmartTRD.Scanner;
 
 namespace SmartTRD.IBclient
 {
@@ -12,17 +14,30 @@ namespace SmartTRD.IBclient
     public class EWrapperImpl : EWrapper
     {
         //! [ewrapperimpl]
-        private int nextOrderId;
+        private int m_nextOrderId;
         //! [socket_declare]
         EClientSocket clientSocket;
-        public readonly EReaderSignal Signal;
+        public readonly EReaderSignal m_signal;
         //! [socket_declare]
+
+        private iStockScannerDB m_stockSckDbP;
+        private iScannerMng m_scnMngP;
 
         //! [socket_init]
         public EWrapperImpl()
         {
-            Signal = new EReaderMonitorSignal();
-            clientSocket = new EClientSocket(this, Signal);
+            m_nextOrderId = 0;
+            m_stockSckDbP = null;      
+            clientSocket = null;
+            m_scnMngP = null;
+            m_signal = new EReaderMonitorSignal();
+        }
+
+        public void Init()
+        {
+            m_stockSckDbP = StockScannerDB.GetInstanse();
+            m_scnMngP = ScannerMng.GetInstanse();
+            clientSocket = new EClientSocket(this, m_signal);
         }
         //! [socket_init]
 
@@ -34,8 +49,8 @@ namespace SmartTRD.IBclient
 
         public int NextOrderId
         {
-            get { return nextOrderId; }
-            set { nextOrderId = value; }
+            get { return m_nextOrderId; }
+            set { m_nextOrderId = value; }
         }
 
         public string BboExchange { get; private set; }
@@ -55,6 +70,7 @@ namespace SmartTRD.IBclient
         public virtual void error(int id, int errorCode, string errorMsg)
         {
             Console.WriteLine("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
+            m_scnMngP.ReportOnReqId(id, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITH_ERROR);
         }
         //! [error]
 
@@ -113,7 +129,7 @@ namespace SmartTRD.IBclient
         public virtual void nextValidId(int orderId)
         {
             Console.WriteLine("Next Valid Id: " + orderId);
-            NextOrderId = orderId;
+            m_nextOrderId = orderId;
         }
         //! [nextvalidid]
 
@@ -353,6 +369,9 @@ namespace SmartTRD.IBclient
         public virtual void historicalData(int reqId, Bar bar)
         {
             Console.WriteLine("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
+
+            string stkName = m_scnMngP.GetStkNameByReqId(reqId);
+            m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
         }
         //! [historicaldata]
 
@@ -417,6 +436,8 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("ScannerData. " + reqId + " - Rank: " + rank + ", Symbol: " + contractDetails.Contract.Symbol + ", SecType: " + contractDetails.Contract.SecType + ", Currency: " + contractDetails.Contract.Currency
                 + ", Distance: " + distance + ", Benchmark: " + benchmark + ", Projection: " + projection + ", Legs String: " + legsStr);
+
+            m_stockSckDbP.InsertNewContrastDestToList(contractDetails);
         }
         //! [scannerdata]
 
@@ -424,6 +445,7 @@ namespace SmartTRD.IBclient
         public virtual void scannerDataEnd(int reqId)
         {
             Console.WriteLine("ScannerDataEnd. " + reqId);
+            m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
         }
         //! [scannerdataend]
 
@@ -445,6 +467,7 @@ namespace SmartTRD.IBclient
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
         {
             Console.WriteLine("HistoricalDataEnd - " + reqId + " from " + startDate + " to " + endDate);
+            m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
         }
         //! [historicaldataend]
 
