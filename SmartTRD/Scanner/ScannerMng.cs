@@ -85,12 +85,16 @@ namespace SmartTRD.Scanner
                            
             }
 
-            //=========================== Phase 2 - Build Full DB - History and Contrart Details ===================
+            //=========================== Phase 2 - Filter Full DB - by OTC marget values ===================
+            FilterStkByOtcMarkertData();
+            //=========================== Phase 2 - Filter Full DB - by OTC marget values ===================
+
+            //=========================== Phase 3 - Build Full DB - History and Contrart Details ===================
             //Build history of 6 month backward for future algoritem
             Thread hisDataT = new Thread(() => GetHistoryDataForScanStk());
             hisDataT.Start();
             hisDataT.Join();
-            //=========================== Phase 2 - Build Full DB - History and Contrart Details ===================
+            //=========================== Phase 3 - Build Full DB - History and Contrart Details ===================
         }
 
         public void ReportOnReqId(int reqId_A, INTERVAL_STATUS_e reqStatus_A)
@@ -119,6 +123,45 @@ namespace SmartTRD.Scanner
             }
 
             return stkName;
+        }
+
+        private void FilterStkByOtcMarkertData()
+        {
+            List<Contract> stkResFromScan = m_stockScnDbP.GetStkContractFromScanRes();
+            //Parmter for filter 
+            int unrestricredLowLimit = 500000000;//Config
+            int unrestricredUpeerLimit = 2000000000;//Config
+            int offsetBetAsAndOsIsPrecent = 20;//20%//Config
+
+
+            foreach (Contract stk in stkResFromScan)
+            {
+                bool deleteStk = false;
+                string vpDate = "";
+                string jsonInString = Http.HttpOtcMarket.GetStrFromOtcMarket(stk.Symbol);
+                if (jsonInString == "")//There is no json
+                {
+                    deleteStk = true;
+                }
+                else
+                {
+                    JsonAnalyzer.JsonStkInfo jsonStk = new JsonAnalyzer.JsonStkInfo(jsonInString);
+
+                    if (jsonStk.StkAsPennyStkExempt() == false || 
+                        jsonStk.StkAsTransferAgent() == false || 
+                        jsonStk.StkAsVerfiedProfile(out vpDate) == false || 
+                        jsonStk.StkisOTCQC() == false || 
+                        jsonStk.StkIsPink() == false)
+                    {
+                        deleteStk = true;
+                    }
+                }
+
+                if(deleteStk)
+                {
+                    m_stockScnDbP.DeleteStkFromDB(stk.Symbol);
+                }
+            }
         }
 
         private void StartScanInDiffrentThr()

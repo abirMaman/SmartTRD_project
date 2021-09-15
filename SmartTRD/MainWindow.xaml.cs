@@ -41,16 +41,16 @@ namespace SmartTRD
             InitAll();
 
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("FZMD");
-            string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("PBYA");
+            //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("PBYA");
 
-            JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
+          //  JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
 
-            js.StkIsPink();
-            js.StkAsTransferAgent();
-            js.StkisOTCQC();
+          //  js.StkIsPink();
+          //  js.StkAsTransferAgent();
+           // js.StkisOTCQC();
             string date = "";
-            js.StkAsVerfiedProfile(out date);
-            //m_scnMngP.StartScanStkProcess();
+            //js.StkAsVerfiedProfile(out date);
+            m_scnMngP.StartScanStkProcess();
         }
 
         public void CreatePackage()

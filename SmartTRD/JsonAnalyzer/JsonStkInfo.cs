@@ -40,11 +40,18 @@ namespace SmartTRD.JsonAnalyzer
 
             if (m_jsonObject != null)
             {
-                string otcQX = m_jsonObject["legalCounsels"][0]["roles"][1].ToString();
-
-               if(otcQX.Contains("OTCQX"))
+                try
                 {
-                    retAnswer = true;
+                    string otcQX = m_jsonObject["legalCounsels"][0]["roles"][1].ToString();
+
+                    if (otcQX.Contains("OTCQX"))
+                    {
+                        retAnswer = true;
+                    }
+                }
+                catch(Exception e)
+                {
+
                 }
                   
             }

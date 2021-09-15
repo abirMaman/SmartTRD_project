@@ -55,6 +55,11 @@ namespace SmartTRD.DB
             }
         }
 
+        public void DeleteStkFromDB(string sybmol_A)
+        {
+            m_conDescScanner_P.Remove(sybmol_A);
+        }
+
         public List<ContractDetails> GetStkContractDetailsFromDB()
         {
             List<ContractDetails> listOfScanContract = new List<ContractDetails>();

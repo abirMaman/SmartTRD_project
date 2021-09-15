@@ -13,9 +13,10 @@ namespace SmartTRD.DB
 
         void InsertNewContrastDestToList(ContractDetails contractDescriptions_A);
         void InsertNetHistoryBarContractToList(string stkName, Bar barHistory_A);
+        void DeleteStkFromDB(string sybmol_A);
         List<Contract> GetStkContractFromScanRes();
-
         List<ContractDetails> GetStkContractDetailsFromDB();
+
 
     }
 }
