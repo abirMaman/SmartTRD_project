@@ -117,10 +117,14 @@ namespace SmartTRD.Scanner
         {
             string stkName = "";
             SCAN_INTERVAL_INFO_s reqScanInfo;
-            if (m_scanMngInfoL.TryGetValue(reqId_A, out reqScanInfo))
+            try
             {
-                stkName = reqScanInfo.stkName;
+                if (m_scanMngInfoL.TryGetValue(reqId_A, out reqScanInfo))
+                {
+                    stkName = reqScanInfo.stkName;
+                }
             }
+            catch (Exception e){ }
 
             return stkName;
         }
@@ -131,27 +135,58 @@ namespace SmartTRD.Scanner
             //Parmter for filter 
             int unrestricredLowLimit = 500000000;//Config
             int unrestricredUpeerLimit = 2000000000;//Config
-            int offsetBetAsAndOsIsPrecent = 20;//20%//Config
-
+            double offsetBetAsAndOsIsPrecent = 0.2;//20%//Config
 
             foreach (Contract stk in stkResFromScan)
             {
                 bool deleteStk = false;
                 string vpDate = "";
-                string jsonInString = Http.HttpOtcMarket.GetStrFromOtcMarket(stk.Symbol);
-                if (jsonInString == "")//There is no json
+                string jsonFullInString = Http.HttpOtcMarket.GetStrFromFullProfileOtcMarket(stk.Symbol);
+                string jsonSymbolInString = Http.HttpOtcMarket.GetStrFromSymbolProfileOtcMarket(stk.Symbol);
+                if (jsonFullInString == "" ||
+                    jsonSymbolInString == "")//There is no json
                 {
                     deleteStk = true;
                 }
                 else
                 {
-                    JsonAnalyzer.JsonStkInfo jsonStk = new JsonAnalyzer.JsonStkInfo(jsonInString);
+                    JsonAnalyzer.JsonStkInfo jsonStk = new JsonAnalyzer.JsonStkInfo(jsonFullInString);
+                    JsonAnalyzer.JsonStkStmbolInfo jsonSymbolStk = new JsonAnalyzer.JsonStkStmbolInfo(jsonSymbolInString);
 
-                    if (jsonStk.StkAsPennyStkExempt() == false || 
-                        jsonStk.StkAsTransferAgent() == false || 
-                        jsonStk.StkAsVerfiedProfile(out vpDate) == false || 
-                        jsonStk.StkisOTCQC() == false || 
-                        jsonStk.StkIsPink() == false)
+                    int unrShare = jsonStk.GetStkUnrestricted();
+                    int autShare = jsonStk.GetStkAutorizedShare();
+                    int osShare = jsonStk.GetStkOutstandingShare();
+                    int diffBetASandOS = autShare - osShare;
+
+                    if(jsonSymbolStk.StkAsPennyStkExempt() == false)
+                    {
+                        deleteStk = true;
+                    }
+                    else if(jsonStk.StkAsTransferAgent() == false)
+                    {
+                        deleteStk = true;
+                    }
+                    else if(jsonStk.StkAsVerfiedProfile(out vpDate) == false)
+                    {
+                        deleteStk = true;
+                    }
+                    else if(jsonStk.StkisOTCQC() == false)
+                    {
+                        deleteStk = true;
+                    }
+                    else if (jsonStk.StkIsPink() == false)
+                    {
+                        deleteStk = true;
+                    }
+                    else if (unrestricredLowLimit > unrShare)
+                    {
+                        deleteStk = true;
+                    }
+                    else if(unrestricredUpeerLimit < unrShare)
+                    {
+                        deleteStk = true;
+                    }
+                    else if (autShare * offsetBetAsAndOsIsPrecent > diffBetASandOS)
                     {
                         deleteStk = true;
                     }
@@ -176,7 +211,7 @@ namespace SmartTRD.Scanner
             waitToAnswerT.Start();
             ///Create wait to answer Thread ->> From Wrapper ====
 
-            double belowPrice = 0.0150;//Config
+            double belowPrice = 0.02;//Config
             double abovePrice = 0.0050;//Config
             int aboveVol = 0;//Config
             for (int i = 0; i < m_scanType.Length; i++)
@@ -213,7 +248,7 @@ namespace SmartTRD.Scanner
                 if(m_clientP != null)
                 {
                     InsertReqToWaitMngArray(con.Symbol);
-                    m_clientP.GetHistorySymbolData(con, 6, "TRADES");
+                    m_clientP.GetHistorySymbolData(con, "6 M", "30 min", "TRADES");
                 }
             }
 

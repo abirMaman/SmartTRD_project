@@ -25,9 +25,8 @@ namespace SmartTRD.JsonAnalyzer
             {
                 var secFromJson = m_jsonObject["securities"][0];
 
-                retAnswer = bool.Parse(secFromJson["isPinkSheets"].ToString());
-
-                
+                string tierName = secFromJson["tierName"].ToString();
+                retAnswer = tierName == "Pink Current";
 
             }
 
@@ -78,10 +77,6 @@ namespace SmartTRD.JsonAnalyzer
             return retAnswer;
         }
 
-        public bool StkAsPennyStkExempt()
-        {
-            return true;
-        }
     
         public bool StkAsTransferAgent()
         {

@@ -23,6 +23,14 @@ namespace SmartTRD
     /// </summary>
     public partial class MainWindow : Window
     {
+        public enum MAIN_ACTIVE_ACTION_e
+        {
+            MAIN_ACTIVE_ACTION_NONE = 0,
+            MAIN_ACTIVE_ACTION_SCANNER = 1,
+            MAIN_ACTIVE_ACTION_BID_ASK_ALGO = 2
+        }
+        public static MAIN_ACTIVE_ACTION_e m_actAction;
+
         private BclientCon m_bClientP;
         private ScannerMng m_scnMngP;
         private EWrapperImpl m_testImpl;
@@ -32,6 +40,7 @@ namespace SmartTRD
         {
             InitializeComponent();
 
+            m_actAction = MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_NONE;
             m_bClientP = null;
             m_scnMngP = null;
             m_stkDbP = null;
@@ -41,16 +50,16 @@ namespace SmartTRD
             InitAll();
 
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("FZMD");
-            //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("PBYA");
+            //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("NNRX");
 
-          //  JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
+          //JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
 
-          //  js.StkIsPink();
+            //js.StkIsPink();
           //  js.StkAsTransferAgent();
            // js.StkisOTCQC();
             string date = "";
             //js.StkAsVerfiedProfile(out date);
-            m_scnMngP.StartScanStkProcess();
+           //m_scnMngP.StartScanStkProcess();
         }
 
         public void CreatePackage()

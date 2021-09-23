@@ -62,10 +62,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Algo\AlgoTrd.cs" />
+    <Compile Include="BidAsk_Algo\BidAskAlgo.cs" />
+    <Compile Include="BidAsk_Algo\iBidAskAlgo.cs" />
+    <Compile Include="DB\BidAskAlgoDB.cs" />
+    <Compile Include="DB\iBidAskAlgoDB.cs" />
     <Compile Include="DB\iStockScannerDB.cs" />
     <Compile Include="DB\StockScannerDB.cs" />
     <Compile Include="Http\HttpOtcMarket.cs" />
     <Compile Include="JsonAnalyzer\JsonStkInfo.cs" />
+    <Compile Include="JsonAnalyzer\JsonStkStmbolInfo.cs" />
     <Compile Include="Scanner\iScannerMng.cs" />
     <Compile Include="Scanner\ScannerMng.cs" />
     <Compile Include="Scanner\ScannerMngDB.cs" />

@@ -371,7 +371,8 @@ namespace SmartTRD.IBclient
             Console.WriteLine("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
 
             string stkName = m_scnMngP.GetStkNameByReqId(reqId);
-            m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
+            if(MainWindow.m_actAction  == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_SCANNER)
+                m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
         }
         //! [historicaldata]
 
@@ -437,7 +438,8 @@ namespace SmartTRD.IBclient
             Console.WriteLine("ScannerData. " + reqId + " - Rank: " + rank + ", Symbol: " + contractDetails.Contract.Symbol + ", SecType: " + contractDetails.Contract.SecType + ", Currency: " + contractDetails.Contract.Currency
                 + ", Distance: " + distance + ", Benchmark: " + benchmark + ", Projection: " + projection + ", Legs String: " + legsStr);
 
-            m_stockSckDbP.InsertNewContrastDestToList(contractDetails);
+            if (MainWindow.m_actAction == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_SCANNER)
+                m_stockSckDbP.InsertNewContrastDestToList(contractDetails);
         }
         //! [scannerdata]
 
@@ -581,6 +583,11 @@ namespace SmartTRD.IBclient
         {
             string derivSecTypes;
             Console.WriteLine("Symbol Samples. Request Id: {0}", reqId);
+
+            if(MainWindow.m_actAction == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO)
+            {
+
+            }
 
             foreach (var contractDescription in contractDescriptions)
             {
@@ -759,7 +766,7 @@ namespace SmartTRD.IBclient
             }
         }
         //! [historicalticks]
-
+        
         //! [historicalticksbidask]
         public void historicalTicksBidAsk(int reqId, HistoricalTickBidAsk[] ticks, bool done)
         {
