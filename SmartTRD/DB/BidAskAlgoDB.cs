@@ -85,6 +85,15 @@ namespace SmartTRD.DB
             return tempVol;
         }
 
+        public double GetFirstBid()
+        {
+            return m_firAskBid.first_bid;
+        }
+        public double GetFirstAsk()
+        {
+            return m_firAskBid.first_ask;
+        }
+
         public List<Bar> GetHistoryData()
         {
             return m_lastHisData;

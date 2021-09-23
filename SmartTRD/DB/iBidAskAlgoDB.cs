@@ -31,5 +31,7 @@ namespace SmartTRD.DB
          bool AskAndBidAsReceived();
 
          bool ContractAsReceived();
+         double GetFirstBid();
+        double GetFirstAsk();
     }
 }

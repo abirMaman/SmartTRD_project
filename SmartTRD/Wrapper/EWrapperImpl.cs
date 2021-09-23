@@ -20,6 +20,7 @@ namespace SmartTRD.IBclient
         public readonly EReaderSignal m_signal;
         //! [socket_declare]
 
+        private iBidAskAlgoDB m_bidAskAlgoDB;
         private iStockScannerDB m_stockSckDbP;
         private iScannerMng m_scnMngP;
 
@@ -27,7 +28,8 @@ namespace SmartTRD.IBclient
         public EWrapperImpl()
         {
             m_nextOrderId = 0;
-            m_stockSckDbP = null;      
+            m_stockSckDbP = null;
+            m_bidAskAlgoDB = null;
             clientSocket = null;
             m_scnMngP = null;
             m_signal = new EReaderMonitorSignal();
@@ -36,6 +38,7 @@ namespace SmartTRD.IBclient
         public void Init()
         {
             m_stockSckDbP = StockScannerDB.GetInstanse();
+            m_bidAskAlgoDB = BidAskAlgoDB.GetInstanse();
             m_scnMngP = ScannerMng.GetInstanse();
             clientSocket = new EClientSocket(this, m_signal);
         }
@@ -586,7 +589,7 @@ namespace SmartTRD.IBclient
 
             if(MainWindow.m_actAction == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO)
             {
-
+                m_bidAskAlgoDB.SetContract(contractDescriptions[0].Contract);
             }
 
             foreach (var contractDescription in contractDescriptions)

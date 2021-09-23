@@ -96,13 +96,21 @@ namespace SmartTRD.IBclient
            //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
              String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
-            string time = "20210922 23:00:00";
+            string time = "20210922 16:30:00";
+            string timec = "20210922 16:30:10";
+            DateTime tt = new DateTime(2021, 09, 22, 16, 30, 00);
+            DateTime tt1 = new DateTime(2021, 09, 22, 16, 30, 10);
+            double ttee =  tt1.Subtract(tt).TotalSeconds;
+            string time1 = "20210921 23:00:00";
+            string timee = "20210923 15:00:00";
             //m_clientSocket.reqRealTimeBars(3001, contract, 5, "MIDPOINT", true, null);
             //String queryTimeEnd = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
             //m_clientSocket.reqHistoricalData(4005, contract, null, "1 D", "5 secs", "TRADES", 1, 1, true, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK_BID", 1, 1, false, null);//Save for algo!!!!!
-             m_clientSocket.reqHistoricalData(4004, contract, time, "1 D", "1 min", "BID_ASK", 1, 1, false, null);//Save for algo!!!!!
+           // m_clientSocket.reqHistoricalData(4004, contract, time1, "1 D", "1 min", "BID", 1, 1, false, null);//Save for algo!!!!!
+           // m_clientSocket.reqHistoricalData(4006, contract, time1, "1 D", "1 min", "ASK", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK", 1, 1, false, null);//Save for algo!!!!!
+            m_clientSocket.reqHistoricalTicks(4005, contract, timee, "", 1000, "TRADES", 1, false, null);
 
             //for (int i = 0; i < 300; i++)
             //{
@@ -183,6 +191,15 @@ namespace SmartTRD.IBclient
                     queryTime = time_A;
 
                 m_clientSocket.reqHistoricalData(++m_reqId, contrast_A, queryTime, dayToHis_A, resBar_A, infoType_A, 1, 1, false, null);
+            }
+        }
+
+        public void GetHistorySymbolDataTickByTick(Contract contrast_A,string time_A,int maxTicks_A,string whatToShow_A)
+        {
+            
+            if(m_clientSocket != null)
+            {
+                m_clientSocket.reqHistoricalTicks(++m_reqId, contrast_A, time_A, "", maxTicks_A, whatToShow_A, 1, false, null);
             }
         }
 
