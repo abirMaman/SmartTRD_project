@@ -18,11 +18,11 @@ namespace SmartTRD.DB
 
          void SetCurrVol(int vol_A);
 
-         void InsertNewHistoryData(Bar currBar_A);
+         void InsertNewHistoryData(HistoricalTickLast currBar_A);
 
          int GetCurrVol();
 
-         List<Bar> GetHistoryData();
+         List<HistoricalTickLast> GetHistoryData();
     
          bool HistoryDataAsReceived();
 

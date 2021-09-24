@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IBApi;
+using SmartTRD.BidAsk_Algo;
 using SmartTRD.DB;
 using SmartTRD.Scanner;
 
@@ -22,6 +23,7 @@ namespace SmartTRD.IBclient
 
         private iBidAskAlgoDB m_bidAskAlgoDB;
         private iStockScannerDB m_stockSckDbP;
+        private iBidAskAlgo m_bidAskAlgoP;
         private iScannerMng m_scnMngP;
 
         //! [socket_init]
@@ -32,6 +34,7 @@ namespace SmartTRD.IBclient
             m_bidAskAlgoDB = null;
             clientSocket = null;
             m_scnMngP = null;
+            m_bidAskAlgoP = null;
             m_signal = new EReaderMonitorSignal();
         }
 
@@ -40,6 +43,7 @@ namespace SmartTRD.IBclient
             m_stockSckDbP = StockScannerDB.GetInstanse();
             m_bidAskAlgoDB = BidAskAlgoDB.GetInstanse();
             m_scnMngP = ScannerMng.GetInstanse();
+            m_bidAskAlgoP = BidAskAlgo.GetInstanse();
             clientSocket = new EClientSocket(this, m_signal);
         }
         //! [socket_init]
@@ -376,6 +380,17 @@ namespace SmartTRD.IBclient
             string stkName = m_scnMngP.GetStkNameByReqId(reqId);
             if(MainWindow.m_actAction  == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_SCANNER)
                 m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
+            else if(MainWindow.m_actAction == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO)
+            {
+               if(reqId == m_bidAskAlgoP.GetAskReqId() && m_bidAskAlgoDB.GetFirstAsk() == 0)
+                {
+                    m_bidAskAlgoDB.SetFirstAsk(bar.Close);
+                }
+               else if(reqId == m_bidAskAlgoP.GetBidReqId() && m_bidAskAlgoDB.GetFirstBid() == 0)
+                {
+                    m_bidAskAlgoDB.SetFirstBid(bar.Close);
+                }
+            }
         }
         //! [historicaldata]
 
@@ -788,6 +803,11 @@ namespace SmartTRD.IBclient
             {
                 Console.WriteLine("Historical Tick Last. Request Id: {0}, Time: {1}, Price: {2}, Size: {3}, Exchange: {4}, Special Conditions: {5}, Last Tick Attribs: {6} ",
                     reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.Price, tick.Size, tick.Exchange, tick.SpecialConditions, tick.TickAttribLast);
+
+                if(MainWindow.m_actAction == MainWindow.MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO)
+                {
+                    m_bidAskAlgoDB.InsertNewHistoryData(tick);
+                }
             }
         }
         //! [historicaltickslast]

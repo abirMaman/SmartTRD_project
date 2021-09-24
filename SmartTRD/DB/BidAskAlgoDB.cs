@@ -20,7 +20,7 @@ namespace SmartTRD.DB
 
         static BidAskAlgoDB m_instase;
         CONTRACT_FIRST_ASKBID_INFO_s m_firAskBid;
-        List<Bar> m_lastHisData;
+        List<HistoricalTickLast> m_lastHisData;
         int m_currVol;
         Contract m_currContract;
 
@@ -32,6 +32,11 @@ namespace SmartTRD.DB
             m_firAskBid.first_bid = 0.0;
             m_currVol = 0;
             m_instase = this;
+        }
+
+        public void Init()
+        {
+
         }
 
         public static BidAskAlgoDB GetInstanse()
@@ -50,6 +55,7 @@ namespace SmartTRD.DB
 
         public void SetContract(Contract con_A)
         {
+            con_A.Exchange = "SMART";
             m_currContract = con_A;
         }
 
@@ -71,10 +77,10 @@ namespace SmartTRD.DB
         {
             m_currVol = vol_A;
         }
-        public void InsertNewHistoryData(Bar currBar_A)
+        public void InsertNewHistoryData(HistoricalTickLast currBar_A)
         {
             if (m_lastHisData == null)
-                m_lastHisData = new List<Bar>();
+                m_lastHisData = new List<HistoricalTickLast>();
 
             m_lastHisData.Add(currBar_A);
         }
@@ -94,9 +100,11 @@ namespace SmartTRD.DB
             return m_firAskBid.first_ask;
         }
 
-        public List<Bar> GetHistoryData()
+        public List<HistoricalTickLast> GetHistoryData()
         {
-            return m_lastHisData;
+            List<HistoricalTickLast> returnList = new List<HistoricalTickLast>(m_lastHisData);
+            m_lastHisData = null;
+            return returnList;
         }
 
         public bool HistoryDataAsReceived()

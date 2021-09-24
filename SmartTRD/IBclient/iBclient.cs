@@ -15,7 +15,7 @@ namespace SmartTRD.IBclient
         void GetContransDetails(Contract contranst_A);
         void GetSymbolDetails(string symbol_A);
         int GetNextReqId();
-        void GetHistorySymbolDataTickByTick(Contract contrast_A, string time_A, int maxTicks_A, string whatToShow_A);
+        void GetHistorySymbolDataTickByTick(Contract contrast_A, string st_time_A,string end_time_A, int maxTicks_A, string whatToShow_A);
 
     }
 }

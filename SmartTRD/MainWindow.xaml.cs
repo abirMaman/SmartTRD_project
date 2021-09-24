@@ -1,4 +1,5 @@
-﻿using SmartTRD.DB;
+﻿using SmartTRD.BidAsk_Algo;
+using SmartTRD.DB;
 using SmartTRD.IBclient;
 using SmartTRD.Scanner;
 using System;
@@ -35,6 +36,8 @@ namespace SmartTRD
         private ScannerMng m_scnMngP;
         private EWrapperImpl m_testImpl;
         private StockScannerDB m_stkDbP;
+        private BidAskAlgoDB m_bidAskAlgoDbP;
+        private BidAskAlgo m_bidAskAlgoP;
 
         public MainWindow()
         {
@@ -52,14 +55,17 @@ namespace SmartTRD
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("FZMD");
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("NNRX");
 
-          //JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
+            //JsonAnalyzer.JsonStkInfo js = new JsonAnalyzer.JsonStkInfo(ret);
 
             //js.StkIsPink();
-          //  js.StkAsTransferAgent();
-           // js.StkisOTCQC();
-            string date = "";
+            //  js.StkAsTransferAgent();
+            // js.StkisOTCQC();
+            //string date = "";
             //js.StkAsVerfiedProfile(out date);
-           //m_scnMngP.StartScanStkProcess();
+            //m_scnMngP.StartScanStkProcess();
+
+            m_actAction = MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO;
+            m_bidAskAlgoP.StartAskBidAlgo("PBYA", "20210923");
         }
 
         public void CreatePackage()
@@ -69,6 +75,9 @@ namespace SmartTRD
             m_bClientP = new BclientCon();
             m_stkDbP = new StockScannerDB();
             m_scnMngP = new ScannerMng();
+            m_bidAskAlgoP = new BidAskAlgo();
+            m_bidAskAlgoDbP = new BidAskAlgoDB();
+            
         }
 
         public void InitAll()
@@ -78,6 +87,8 @@ namespace SmartTRD
             m_bClientP.connectToIbClientTWS("127.0.0.1", 7497, 1);      
             m_scnMngP.Init();
             m_stkDbP.Init();
+            m_bidAskAlgoP.Init();
+            m_bidAskAlgoDbP.Init();
         }
     }
 }
