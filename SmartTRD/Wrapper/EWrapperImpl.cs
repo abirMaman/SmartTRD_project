@@ -81,7 +81,15 @@ namespace SmartTRD.IBclient
         public virtual void error(int id, int errorCode, string errorMsg)
         {
             Console.WriteLine("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
-            m_scnMngP.ReportOnReqId(id, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITH_ERROR);
+            switch (m_reqIdMngP.GetActionReqFronDic(id))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
+                    m_scnMngP.ReportOnReqId(id, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITH_ERROR);
+                    break;
+                default:
+                    break;
+
+            }    
         }
         //! [error]
 
@@ -107,6 +115,11 @@ namespace SmartTRD.IBclient
         public virtual void tickSize(int tickerId, int field, long size)
         {
             Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + size);
+
+            if (tickerId == 8)//Volume
+                m_bidAskAlgoDB.SetCurrVol((int)size);
+
+
         }
         //! [ticksize]
 
@@ -401,8 +414,6 @@ namespace SmartTRD.IBclient
                     break;
             }
 
-
-            m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [historicaldata]
 
@@ -478,7 +489,7 @@ namespace SmartTRD.IBclient
                     break;
                
             }
-            m_reqIdMngP.RemoveActionFromDic(reqId);
+          
         }
         //! [scannerdata]
 
@@ -486,7 +497,16 @@ namespace SmartTRD.IBclient
         public virtual void scannerDataEnd(int reqId)
         {
             Console.WriteLine("ScannerDataEnd. " + reqId);
-            m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
+            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
+                    m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
+                    break;
+                default:
+                    break;
+
+            }      
+            m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [scannerdataend]
 
@@ -508,7 +528,16 @@ namespace SmartTRD.IBclient
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
         {
             Console.WriteLine("HistoricalDataEnd - " + reqId + " from " + startDate + " to " + endDate);
-            m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
+            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
+                    m_scnMngP.ReportOnReqId(reqId, ScannerMngDB.INTERVAL_STATUS_e.FINSHED_WITHOUT_ERROR);
+                    break;
+                default:
+                    break;
+
+            }
+            m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [historicaldataend]
 

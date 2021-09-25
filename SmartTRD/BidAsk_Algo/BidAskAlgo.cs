@@ -200,14 +200,12 @@ namespace SmartTRD.BidAsk_Algo
                     m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), "", ((DateTime)currTime).ToString("yyyyMMdd HH:mm:ss"), 1000, "TRADES");
 
                     m_hisInfo.reqInfoArr[1].actReqId = m_clientP.GetNextReqId();//Vol
-                    m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[1].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    //m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[1].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
                     m_clientP.GetMktData(1, m_bidAskDb.GetCurrContract());
-
-                    Thread volThr = new Thread(() => WaitAndGetVolData());
-                    volThr.Start();
 
                     Thread anlThr = new Thread(() => WaitAndGetHistoryData(m_firstTime));
                     anlThr.Start();
+
                     Thread.Sleep(9990);
                     m_hisInfo.wakeUpFromTimeOut = true;
                     m_firstTime = (DateTime)currTime;
@@ -224,48 +222,18 @@ namespace SmartTRD.BidAsk_Algo
 
             MessageBox.Show("Stop");
         }
-
-        private void WaitAndGetVolData()
-        {
-            Thread.Sleep(9500);
-
-            while (m_hisInfo.reqInfoArr[1].reqReceiveAnw == false &&
-              m_hisInfo.wakeUpFromTimeOut == false)
-            {
-                m_hisInfo.reqInfoArr[1].reqReceiveAnw = m_bidAskDb.VolAsReceivd();
-
-                if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
-                {
-                    m_bidAskVolRes.tradeVol = m_bidAskDb.GetCurrVol();
-
-                    
-                }
-            }
-
-            if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
-            {
-                Console.WriteLine("curr vol = " + m_bidAskVolRes.tradeVol);
-                //HandleGUI
-            }
-            else
-            {
-
-              m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[1].actReqId);
-                
-            }
-        }
-
-
         private void WaitAndGetHistoryData(DateTime firstTime_A)
         {
-            Thread.Sleep(3000);//Wait  for update
+            Thread.Sleep(1000);//Wait for update
+            bool allDataReceivd = false;
 
-            while(m_hisInfo.reqInfoArr[0].reqReceiveAnw == false && 
+            while(allDataReceivd == false && 
                 m_hisInfo.wakeUpFromTimeOut == false)
             {
                 m_hisInfo.reqInfoArr[0].reqReceiveAnw = m_bidAskDb.HistoryDataAsReceived();
+                m_hisInfo.reqInfoArr[1].reqReceiveAnw = m_bidAskDb.VolAsReceivd();
 
-                if(m_hisInfo.reqInfoArr[0].reqReceiveAnw)
+                if (m_hisInfo.reqInfoArr[0].reqReceiveAnw)
                 {
                     List<HistoricalTickLast> hisDataList = m_bidAskDb.GetHistoryData();
                     foreach(HistoricalTickLast his in hisDataList)
@@ -299,16 +267,26 @@ namespace SmartTRD.BidAsk_Algo
                         }
                     }
                 }
+                if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
+                {
+                    m_bidAskVolRes.tradeVol = m_bidAskDb.GetCurrVol();
+                }
+
+                allDataReceivd = m_hisInfo.reqInfoArr[0].reqReceiveAnw && m_hisInfo.reqInfoArr[1].reqReceiveAnw;
             }
-            if(m_hisInfo.reqInfoArr[0].reqReceiveAnw)
+            if(allDataReceivd)
             {
                 Console.WriteLine("ask price = " + m_bidAskVolRes.askPrice + " ask size = " + m_bidAskVolRes.askSize);
                 Console.WriteLine("bid price = " + m_bidAskVolRes.bidPrice + " bid size = " + m_bidAskVolRes.bidSize);
+                Console.WriteLine("curr vol = " + m_bidAskVolRes.tradeVol);
                 //Update GUI
             }
             else
             {
-                m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[0].actReqId);
+                if(!m_hisInfo.reqInfoArr[0].reqReceiveAnw)
+                    m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[0].actReqId);
+                if (!m_hisInfo.reqInfoArr[1].reqReceiveAnw)
+                    m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[1].actReqId);
             }
 
         }

@@ -98,7 +98,7 @@ namespace SmartTRD.IBclient
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
              String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
             string time = "20210922 16:30:00";
-            string timec = "20210924 20:01:00";
+            string timec = "20210924 23:00:00";
             DateTime tt = new DateTime(2021, 09, 22, 16, 30, 00);
             DateTime tt1 = new DateTime(2021, 09, 22, 16, 30, 10);
             double ttee =  tt1.Subtract(tt).TotalSeconds;

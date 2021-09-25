@@ -38,11 +38,17 @@
     <Reference Include="CSharpAPI">
       <HintPath>..\..\..\..\..\..\TWS API\source\CSharpClient\client\bin\Debug\net45\CSharpAPI.dll</HintPath>
     </Reference>
+    <Reference Include="MahApps.Metro">
+      <HintPath>..\..\..\..\Desktop\WedForRon\Wedding\Wedding\bin\Debug\MahApps.Metro.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>..\..\..\..\Desktop\WedForRon\Wedding\Wedding\bin\Debug\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -120,6 +126,14 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Images\ib_logo_2015.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="LogoIcon.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\LogoIcon.gif" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

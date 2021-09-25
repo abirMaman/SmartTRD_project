@@ -17,13 +17,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using MahApps.Metro.Controls;
 
 namespace SmartTRD
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
  
 
@@ -61,7 +62,7 @@ namespace SmartTRD
             //m_scnMngP.StartScanStkProcess();
 
   
-            m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
+          //  m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
         }
 
         public void CreatePackage()

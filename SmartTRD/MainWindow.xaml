@@ -1,12 +1,56 @@
-﻿<Window x:Class="SmartTRD.MainWindow"
+﻿<Controls:MetroWindow x:Class="SmartTRD.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:SmartTRD"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
-</Window>
+        Title="MainWindow" Background="LightGray" Width="1920" Height="1080" SizeToContent="WidthAndHeight" WindowStyle="None"  WindowState="Maximized">
+    <Viewbox>
+        <Grid Height="1080" Width="1963" >
+            <Image HorizontalAlignment="Stretch" Source="Images/LogoIcon.gif" Height="78" VerticalAlignment="Stretch" Width="589" Margin="2,15,1372,987"/>
+            <Label  Content="Host:" HorizontalAlignment="Left" Margin="1656,14,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="g_ip_tb" HorizontalAlignment="Left" Height="23" Margin="1699,15,0,0" TextWrapping="Wrap" Text="127.0.0.1" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.378,0.346"  />
+            <Label  Content="PORT:" HorizontalAlignment="Left" Margin="1823,13,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="g_port_tb" HorizontalAlignment="Left" Height="23" Margin="1877,15,0,0" TextWrapping="Wrap" Text="7497" VerticalAlignment="Top" Width="66"/>
+            <Button x:Name="g_connect_bt" Content="Connect" HorizontalAlignment="Left" Margin="1781,61,0,0" VerticalAlignment="Top" Width="75"/>
+            <Border x:Name="g_conStatus_br" BorderBrush="Black" Background="Red" BorderThickness="1" HorizontalAlignment="Left" Height="24" Margin="1878,62,0,0" VerticalAlignment="Top" Width="29"/>
+            <Border BorderBrush="Black" BorderThickness="10" Background="Black" HorizontalAlignment="Left" Height="0" Margin="0,79,0,0" VerticalAlignment="Top" Width="1522"/>
+            <TabControl HorizontalAlignment="Left"  Height="585" Margin="5,100,-1,0" VerticalAlignment="Top" Width="1959">
+                <TabItem Header="Online">
+                    <Grid Background="#FFE5E5E5">
+                        <TabControl HorizontalAlignment="Left" Height="208" Margin="10,10,0,0" VerticalAlignment="Top" Width="1693">
+                            <TabItem Header="Bid Ask Algo">
+                                <Grid Background="#FFE5E5E5" Margin="0,0,-254.8,-315.8">
+                                    <Label Content="Symbol Name :" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                                    <ComboBox HorizontalAlignment="Left" Margin="114,10,0,0" VerticalAlignment="Top" Width="120" IsEditable="True"/>
+                                    <DatePicker HorizontalAlignment="Left" Margin="383,11,0,0" VerticalAlignment="Top"/>
+                                    <Label Content="Exceptinal Purchase :" HorizontalAlignment="Left" Margin="521,12,0,0" VerticalAlignment="Top"/>
+                                    <TextBox HorizontalAlignment="Left" Height="23" Margin="658,11,0,0" TextWrapping="Wrap" Text="500000"  VerticalAlignment="Top" Width="89"/>
+                                    <Label Content="Last trade Date :" HorizontalAlignment="Left" Margin="265,12,0,0" VerticalAlignment="Top"/>
+                                    <Border BorderBrush="Black" Background="Black" BorderThickness="1" HorizontalAlignment="Left" Height="6" Margin="-14,136,0,0" VerticalAlignment="Top" Width="1954"/>
+                                    <Border BorderBrush="Black" BorderThickness="1" Background="Black" HorizontalAlignment="Left" Margin="949,136,0,0" Width="7"/>
+                                    <Label Content="ASK" FontSize="45" FontWeight="Black" HorizontalAlignment="Left" Margin="415,168,0,0" VerticalAlignment="Top"/>
+                                    <Label Content="BID" FontSize="45" FontWeight="Black" HorizontalAlignment="Left" Margin="1446,162,0,0" VerticalAlignment="Top"/>
+                                    <Button Content="Start" HorizontalAlignment="Left" Margin="855,72,0,0" VerticalAlignment="Top" Width="75"/>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="TabItem">
+                                <Grid Background="#FFE5E5E5" Margin="0,0,-210.8,-321.8"/>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Offline">
+                    <Grid Background="#FFE5E5E5"/>
+                </TabItem>
+            </TabControl>
+            <TabControl HorizontalAlignment="Left" Height="380" Margin="0,690,0,0" VerticalAlignment="Top" Width="1959">
+                <TabItem Header="Log">
+                    <Grid Background="#FFE5E5E5"/>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </Viewbox>
+</Controls:MetroWindow>
