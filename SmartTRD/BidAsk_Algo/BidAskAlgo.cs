@@ -1,6 +1,7 @@
 ﻿using IBApi;
 using SmartTRD.DB;
 using SmartTRD.IBclient;
+using SmartTRD.ReqId;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -22,39 +23,49 @@ namespace SmartTRD.BidAsk_Algo
             public double bidPrice;
             public int tradeVol;
             public int dollarVol;
+            public int countMaxTrdStkBid;
+            public long countSizeOfTrdStkBid;
+            public int countMaxTrdStkAsk;
+            public long countSizeOfTrdStkAsk;
         }
         struct BID_ASK_REQ_ID_s
         {
             public int bid_req_id;
             public int ask_req_id;
         }
-
-        struct HISTORY_REQ_INFO_s
+        struct REQ_INFO_s
         {
             public int actReqId;
-            public bool reqIsActive;
-            public bool wakeUpFromTimeOut;
             public bool reqReceiveAnw;
+        }
+
+        struct HISTORY_VOL_REQ_INFO_s
+        {           
+            public bool wakeUpFromTimeOut;
+            public REQ_INFO_s[] reqInfoArr;
+
         }
 
         private static BidAskAlgo m_instase;
         private ASK_BID_VOLS_INFO_s m_bidAskVolRes;
-        private HISTORY_REQ_INFO_s m_hisInfo;
+        private HISTORY_VOL_REQ_INFO_s m_hisInfo;
         private BID_ASK_REQ_ID_s m_bidAskReqIds;
         private iBidAskAlgoDB m_bidAskDb;
         private iBclient m_clientP;
+        private iReqIdMng m_reqIdMngP;
         private string m_symbol;
         private string m_dateForAskBid;
+        private int m_maxTrdSizeForMark_A;
         private DateTime m_firstTime;
 
         public BidAskAlgo()
         {
             m_clientP = null;
             m_bidAskDb = null;
-            m_bidAskReqIds.ask_req_id = 0;
-            m_bidAskReqIds.bid_req_id = 0;
+            m_reqIdMngP = null;
             m_dateForAskBid = "";
             m_symbol = "";
+            m_maxTrdSizeForMark_A = 0;
             m_instase = this;
         }
 
@@ -67,6 +78,7 @@ namespace SmartTRD.BidAsk_Algo
         {
             m_bidAskDb = BidAskAlgoDB.GetInstanse();
             m_clientP = BclientCon.GetInstase();
+            m_reqIdMngP = ReqIdMng.GetInstanse();
         }
 
         public int GetBidReqId()
@@ -78,13 +90,13 @@ namespace SmartTRD.BidAsk_Algo
             return m_bidAskReqIds.ask_req_id;
         }
 
-
-        public void StartAskBidAlgo(string symbol_A, string dateForAskBid_A)
+        public void StartAskBidAlgoOnline(string symbol_A, string dateForAskBid_A,int maxTrdSizeForMark_A)
         {
             m_symbol = symbol_A;
             m_dateForAskBid = dateForAskBid_A;
-            m_bidAskReqIds.ask_req_id = 0;
-            m_bidAskReqIds.bid_req_id = 0;
+            m_maxTrdSizeForMark_A = maxTrdSizeForMark_A;
+            m_bidAskReqIds = new BID_ASK_REQ_ID_s();
+            m_bidAskVolRes = new ASK_BID_VOLS_INFO_s();
             m_bidAskDb.StartNewSession();
 
             Thread stAlgoT = new Thread(StartAlgoThread);
@@ -134,8 +146,10 @@ namespace SmartTRD.BidAsk_Algo
             m_dateForAskBid += " " + "23:00:00";//Get last update from requested date
 
             m_bidAskReqIds.bid_req_id = m_clientP.GetNextReqId();
+            m_reqIdMngP.InsertReqToDic(m_bidAskReqIds.bid_req_id, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
             m_clientP.GetHistorySymbolData(m_bidAskDb.GetCurrContract(), "1 D", "1 min", "BID", m_dateForAskBid);
             m_bidAskReqIds.ask_req_id = m_clientP.GetNextReqId();
+            m_reqIdMngP.InsertReqToDic(m_bidAskReqIds.ask_req_id, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
             m_clientP.GetHistorySymbolData(m_bidAskDb.GetCurrContract(), "1 D", "1 min", "ASK", m_dateForAskBid);
 
             while (askAndBidReceived == false && countSleep < 5000)
@@ -170,33 +184,38 @@ namespace SmartTRD.BidAsk_Algo
 
             do
             {
-                if (currTime == null)//First time
-                {
-                    currTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                currTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
                        DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
-                }
 
                 double diff = ((DateTime)currTime).Subtract(m_firstTime).TotalSeconds;
 
                 if (diff >= 10)
                 {
-                    m_hisInfo.reqIsActive = true;
-                    m_hisInfo.reqReceiveAnw = false;
-                    m_hisInfo.wakeUpFromTimeOut = false;
-                    m_hisInfo.actReqId = m_clientP.GetNextReqId();
+                    m_hisInfo = new HISTORY_VOL_REQ_INFO_s();
+                    m_hisInfo.reqInfoArr = new REQ_INFO_s[2];
+
+                    m_hisInfo.reqInfoArr[0].actReqId = m_clientP.GetNextReqId();//Bid Ask
+                    m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[0].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
                     Console.WriteLine("time first = " + m_firstTime.ToString("yyyyMMdd HH:mm:ss" + " time curr = " + ((DateTime)currTime).ToString("yyyyMMdd HH:mm:ss")));
                     m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), "", ((DateTime)currTime).ToString("yyyyMMdd HH:mm:ss"), 1000, "TRADES");
+
+                    m_hisInfo.reqInfoArr[1].actReqId = m_clientP.GetNextReqId();//Vol
+                    m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[1].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    m_clientP.GetMktData(1, m_bidAskDb.GetCurrContract());
+
+                    Thread volThr = new Thread(() => WaitAndGetVolData());
+                    volThr.Start();
+
                     Thread anlThr = new Thread(() => WaitAndGetHistoryData(m_firstTime));
                     anlThr.Start();
                     Thread.Sleep(9990);
                     m_hisInfo.wakeUpFromTimeOut = true;
                     m_firstTime = (DateTime)currTime;
-                    currTime = null;
-
+     
                 }
                 else
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(5);
                 }
 
             }
@@ -205,18 +224,48 @@ namespace SmartTRD.BidAsk_Algo
 
             MessageBox.Show("Stop");
         }
-   
+
+        private void WaitAndGetVolData()
+        {
+            Thread.Sleep(9500);
+
+            while (m_hisInfo.reqInfoArr[1].reqReceiveAnw == false &&
+              m_hisInfo.wakeUpFromTimeOut == false)
+            {
+                m_hisInfo.reqInfoArr[1].reqReceiveAnw = m_bidAskDb.VolAsReceivd();
+
+                if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
+                {
+                    m_bidAskVolRes.tradeVol = m_bidAskDb.GetCurrVol();
+
+                    
+                }
+            }
+
+            if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
+            {
+                Console.WriteLine("curr vol = " + m_bidAskVolRes.tradeVol);
+                //HandleGUI
+            }
+            else
+            {
+
+              m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[1].actReqId);
+                
+            }
+        }
+
 
         private void WaitAndGetHistoryData(DateTime firstTime_A)
         {
             Thread.Sleep(3000);//Wait  for update
 
-            while(m_hisInfo.reqReceiveAnw == false && 
+            while(m_hisInfo.reqInfoArr[0].reqReceiveAnw == false && 
                 m_hisInfo.wakeUpFromTimeOut == false)
             {
-                m_hisInfo.reqReceiveAnw = m_bidAskDb.HistoryDataAsReceived();
+                m_hisInfo.reqInfoArr[0].reqReceiveAnw = m_bidAskDb.HistoryDataAsReceived();
 
-                if(m_hisInfo.reqReceiveAnw)
+                if(m_hisInfo.reqInfoArr[0].reqReceiveAnw)
                 {
                     List<HistoricalTickLast> hisDataList = m_bidAskDb.GetHistoryData();
                     foreach(HistoricalTickLast his in hisDataList)
@@ -230,26 +279,38 @@ namespace SmartTRD.BidAsk_Algo
                             {
                                 m_bidAskVolRes.bidPrice = his.Price;
                                 m_bidAskVolRes.bidSize += his.Size;
+                                if(his.Size >= m_maxTrdSizeForMark_A)
+                                {
+                                    m_bidAskVolRes.countMaxTrdStkBid++;
+                                    m_bidAskVolRes.countSizeOfTrdStkBid += his.Size;
+                                }
                             }
                             else
                             {
                                 m_bidAskVolRes.askPrice = his.Price;
                                 m_bidAskVolRes.askSize += his.Size;
+
+                                if (his.Size >= m_maxTrdSizeForMark_A)
+                                {
+                                    m_bidAskVolRes.countMaxTrdStkAsk++;
+                                    m_bidAskVolRes.countSizeOfTrdStkAsk += his.Size;
+                                }
                             }
-                        }
-                        else
-                        {
-                            int x = 1;
                         }
                     }
                 }
             }
-            if(m_hisInfo.reqReceiveAnw)
+            if(m_hisInfo.reqInfoArr[0].reqReceiveAnw)
             {
                 Console.WriteLine("ask price = " + m_bidAskVolRes.askPrice + " ask size = " + m_bidAskVolRes.askSize);
                 Console.WriteLine("bid price = " + m_bidAskVolRes.bidPrice + " bid size = " + m_bidAskVolRes.bidSize);
                 //Update GUI
             }
+            else
+            {
+                m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[0].actReqId);
+            }
+
         }
     }
     }

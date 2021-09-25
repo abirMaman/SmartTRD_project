@@ -175,6 +175,20 @@ namespace SmartTRD.IBclient
             }
         }
 
+        public void GetMktData(int mktType_A,Contract contrart_A)
+        {
+            if (m_clientSocket != null)
+            {
+                 m_clientSocket.reqMarketDataType(mktType_A);
+                m_clientSocket.reqMktData(++m_reqId, contrart_A, string.Empty, false, false, null);
+            }
+        }
+
+        public void CancelReq(int reqId_A)
+        {
+         
+        }
+
         public void GetContransDetails(Contract contranst_A)
         {
 

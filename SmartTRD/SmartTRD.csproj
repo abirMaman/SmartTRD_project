@@ -71,6 +71,8 @@
     <Compile Include="Http\HttpOtcMarket.cs" />
     <Compile Include="JsonAnalyzer\JsonStkInfo.cs" />
     <Compile Include="JsonAnalyzer\JsonStkStmbolInfo.cs" />
+    <Compile Include="ReqId\iReqIdMng.cs" />
+    <Compile Include="ReqId\ReqIdMng.cs" />
     <Compile Include="Scanner\iScannerMng.cs" />
     <Compile Include="Scanner\ScannerMng.cs" />
     <Compile Include="Scanner\ScannerMngDB.cs" />

@@ -1,6 +1,7 @@
 ﻿using SmartTRD.BidAsk_Algo;
 using SmartTRD.DB;
 using SmartTRD.IBclient;
+using SmartTRD.ReqId;
 using SmartTRD.Scanner;
 using System;
 using System.Collections.Generic;
@@ -24,13 +25,7 @@ namespace SmartTRD
     /// </summary>
     public partial class MainWindow : Window
     {
-        public enum MAIN_ACTIVE_ACTION_e
-        {
-            MAIN_ACTIVE_ACTION_NONE = 0,
-            MAIN_ACTIVE_ACTION_SCANNER = 1,
-            MAIN_ACTIVE_ACTION_BID_ASK_ALGO = 2
-        }
-        public static MAIN_ACTIVE_ACTION_e m_actAction;
+ 
 
         private BclientCon m_bClientP;
         private ScannerMng m_scnMngP;
@@ -38,16 +33,17 @@ namespace SmartTRD
         private StockScannerDB m_stkDbP;
         private BidAskAlgoDB m_bidAskAlgoDbP;
         private BidAskAlgo m_bidAskAlgoP;
+        private ReqIdMng m_reqIdMngP;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            m_actAction = MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_NONE;
             m_bClientP = null;
             m_scnMngP = null;
             m_stkDbP = null;
             m_testImpl = null;
+            m_reqIdMngP = null;
 
             CreatePackage();
             InitAll();
@@ -64,8 +60,8 @@ namespace SmartTRD
             //js.StkAsVerfiedProfile(out date);
             //m_scnMngP.StartScanStkProcess();
 
-            m_actAction = MAIN_ACTIVE_ACTION_e.MAIN_ACTIVE_ACTION_BID_ASK_ALGO;
-            m_bidAskAlgoP.StartAskBidAlgo("PBYA", "20210923");
+  
+            m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
         }
 
         public void CreatePackage()
@@ -77,6 +73,7 @@ namespace SmartTRD
             m_scnMngP = new ScannerMng();
             m_bidAskAlgoP = new BidAskAlgo();
             m_bidAskAlgoDbP = new BidAskAlgoDB();
+            m_reqIdMngP = new ReqIdMng();
             
         }
 
@@ -89,6 +86,7 @@ namespace SmartTRD
             m_stkDbP.Init();
             m_bidAskAlgoP.Init();
             m_bidAskAlgoDbP.Init();
+            m_reqIdMngP.Init();
         }
     }
 }

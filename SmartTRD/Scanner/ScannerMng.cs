@@ -1,12 +1,10 @@
 ﻿using IBApi;
 using SmartTRD.DB;
 using SmartTRD.IBclient;
+using SmartTRD.ReqId;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using static SmartTRD.Scanner.ScannerMngDB;
 
 namespace SmartTRD.Scanner
@@ -27,6 +25,7 @@ namespace SmartTRD.Scanner
         //Interfaces
         private iBclient m_clientP;
         private iStockScannerDB m_stockScnDbP;
+        private iReqIdMng m_reqIdMngP;
         private static ScannerMng m_instasne;
         private static bool saveToXml = false;
         private static bool readFromXml = true;
@@ -36,6 +35,7 @@ namespace SmartTRD.Scanner
             m_stockScnDbP = null;
             m_scanMngInfoL = null;
             m_mutex = null;
+            m_reqIdMngP = null;
             m_instasne = this;
         }
 
@@ -47,6 +47,7 @@ namespace SmartTRD.Scanner
         {
             m_clientP = BclientCon.GetInstase();
             m_stockScnDbP = StockScannerDB.GetInstanse();
+            m_reqIdMngP = ReqIdMng.GetInstanse();
             m_mutex = new Mutex();
             m_scanMngInfoL = new Dictionary<int, SCAN_INTERVAL_INFO_s>();
         }
@@ -285,6 +286,7 @@ namespace SmartTRD.Scanner
         private void InsertReqToWaitMngArray(string stkName= "")
         {
             int reqId = m_clientP.GetNextReqId();
+            m_reqIdMngP.InsertReqToDic(reqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER);
             SCAN_INTERVAL_INFO_s scanInterInfo;
             scanInterInfo.req_id = reqId;
             scanInterInfo.reqStatus = INTERVAL_STATUS_e.IN_PROGRESS;
