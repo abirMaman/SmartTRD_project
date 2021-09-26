@@ -8,8 +8,7 @@ namespace SmartTRD.BidAsk_Algo
 {
     interface iBidAskAlgo
     {
-         int GetBidReqId();
-         int GetAskReqId();
+        
 
     }
 }

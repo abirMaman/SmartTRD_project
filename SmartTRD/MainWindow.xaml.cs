@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MahApps.Metro.Controls;
+using System.Net;
 
 namespace SmartTRD
 {
@@ -62,7 +63,7 @@ namespace SmartTRD
             //m_scnMngP.StartScanStkProcess();
 
   
-          //  m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
+           //m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
         }
 
         public void CreatePackage()
@@ -81,13 +82,37 @@ namespace SmartTRD
         public void InitAll()
         {
             m_testImpl.Init();
-            m_bClientP.Init(m_testImpl);
-            m_bClientP.connectToIbClientTWS("127.0.0.1", 7497, 1);      
+            m_bClientP.Init(m_testImpl);          
             m_scnMngP.Init();
             m_stkDbP.Init();
             m_bidAskAlgoP.Init();
             m_bidAskAlgoDbP.Init();
             m_reqIdMngP.Init();
+        }
+
+        private void g_connect_bt_Click(object sender, RoutedEventArgs e)
+        {
+            IPAddress ip;
+            int port;
+            if(IPAddress.TryParse(g_ip_tb.Text,out ip) == false)
+            {
+                MessageBox.Show("Please insert legall ip and try again", "Error Ip", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if(int.TryParse(g_port_tb.Text,out port) == false)
+            {
+                MessageBox.Show("Please insert legall port and try again", "Error Port", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            m_bClientP.connectToIbClientTWS(g_ip_tb.Text, port, 1);
+
+            if(m_bClientP.TwsIsConnectedToApp())
+            {
+                g_mainTab_tbc.IsEnabled = true;
+                g_connect_bt.Content = "Disconnect";
+                g_conStatus_br.Background = Brushes.Green;
+            }
         }
     }
 }

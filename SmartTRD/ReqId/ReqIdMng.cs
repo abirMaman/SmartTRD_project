@@ -42,9 +42,12 @@ namespace SmartTRD.ReqId
         public ACTION_REQ_e GetActionReqFronDic(int req_A)
         {
             ACTION_REQ_e retVal = ACTION_REQ_e.ACTION_REQ_NONE;
-            if (m_reqMngDic.ContainsKey(req_A) == true)
+            if (m_reqMngDic != null)
             {
-                m_reqMngDic.TryGetValue(req_A, out retVal);
+                if (m_reqMngDic.ContainsKey(req_A) == true)
+                {
+                    m_reqMngDic.TryGetValue(req_A, out retVal);
+                }
             }
 
             return retVal;
@@ -52,8 +55,11 @@ namespace SmartTRD.ReqId
 
         public void RemoveActionFromDic(int req_A)
         {
-            if (m_reqMngDic.ContainsKey(req_A) == true)
-                m_reqMngDic.Remove(req_A);
+            if (m_reqMngDic != null)
+            {
+                if (m_reqMngDic.ContainsKey(req_A) == true)
+                    m_reqMngDic.Remove(req_A);
+            }
         }
 
          

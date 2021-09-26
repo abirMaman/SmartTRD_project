@@ -45,6 +45,11 @@ namespace SmartTRD.IBclient
             return (m_reqId + 1);
         }
 
+        public bool TwsIsConnectedToApp()
+        {
+           return m_clientSocket.IsConnected();
+        }
+
         public bool connectToIbClientTWS(string ip_A, int port_A, int clientId_A)
         {
              m_clientSocket = m_testImpl.ClientSocket;
@@ -93,8 +98,8 @@ namespace SmartTRD.IBclient
             //! [stkcontractwithprimary]
             //! [cashcfd]
 
-          // m_clientSocket.reqMarketDataType(4);
-           //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
+           // m_clientSocket.reqMarketDataType(2);
+            //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
              String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
             string time = "20210922 16:30:00";

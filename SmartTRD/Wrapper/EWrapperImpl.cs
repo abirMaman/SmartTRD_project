@@ -27,6 +27,7 @@ namespace SmartTRD.IBclient
         private iBidAskAlgo m_bidAskAlgoP;
         private iScannerMng m_scnMngP;
         private iReqIdMng m_reqIdMngP;
+        private int m_mktDataType;
 
         //! [socket_init]
         public EWrapperImpl()
@@ -108,6 +109,24 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute +
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
+
+            switch (m_reqIdMngP.GetActionReqFronDic(tickerId))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
+                    break;
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
+                        if (m_mktDataType == 2)//Freeze
+                        {
+                            if (field == 1)//Bid
+                                m_bidAskAlgoDB.SetFirstBid(price);
+                            if (field == 2)//Ask
+                                m_bidAskAlgoDB.SetFirstAsk(price);
+                           
+                        }
+                    break;
+                default:
+                    break;
+            }  
         }
         //! [tickprice]
 
@@ -116,10 +135,20 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + size);
 
-            if (tickerId == 8)//Volume
-                m_bidAskAlgoDB.SetCurrVol((int)size);
-
-
+            switch (m_reqIdMngP.GetActionReqFronDic(tickerId))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
+                    break;
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
+                    if (m_mktDataType == 1)
+                    {
+                        if (field == 8)//Volume
+                            m_bidAskAlgoDB.SetCurrVol((int)size);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
         //! [ticksize]
 
@@ -403,14 +432,14 @@ namespace SmartTRD.IBclient
                     m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
                     break;
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                    if (reqId == m_bidAskAlgoP.GetAskReqId() && m_bidAskAlgoDB.GetFirstAsk() == 0)
-                    {
-                        m_bidAskAlgoDB.SetFirstAsk(bar.Close);
-                    }
-                    else if (reqId == m_bidAskAlgoP.GetBidReqId() && m_bidAskAlgoDB.GetFirstBid() == 0)
-                    {
-                        m_bidAskAlgoDB.SetFirstBid(bar.Close);
-                    }
+                    //if (reqId == m_bidAskAlgoP.GetAskReqId() && m_bidAskAlgoDB.GetFirstAsk() == 0)
+                    //{
+                    //    m_bidAskAlgoDB.SetFirstAsk(bar.Close);
+                    //}
+                    //else if (reqId == m_bidAskAlgoP.GetBidReqId() && m_bidAskAlgoDB.GetFirstBid() == 0)
+                    //{
+                    //    m_bidAskAlgoDB.SetFirstBid(bar.Close);
+                    //}
                     break;
             }
 
@@ -421,6 +450,7 @@ namespace SmartTRD.IBclient
         public virtual void marketDataType(int reqId, int marketDataType)
         {
             Console.WriteLine("MarketDataType. " + reqId + ", Type: " + marketDataType + "\n");
+            m_mktDataType = marketDataType;
         }
         //! [marketdatatype]
 

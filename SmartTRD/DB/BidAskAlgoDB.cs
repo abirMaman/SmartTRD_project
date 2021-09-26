@@ -102,7 +102,8 @@ namespace SmartTRD.DB
 
         public List<HistoricalTickLast> GetHistoryData()
         {
-            List<HistoricalTickLast> returnList = new List<HistoricalTickLast>(m_lastHisData);
+            List<HistoricalTickLast> returnList = new List<HistoricalTickLast>(m_lastHisData.Count);
+            returnList = m_lastHisData;
             m_lastHisData = null;
             return returnList;
         }
