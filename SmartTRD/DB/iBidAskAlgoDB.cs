@@ -12,11 +12,13 @@ namespace SmartTRD.DB
          void StartNewSession();
          void SetContract(Contract con_A);
          Contract GetCurrContract();
-         void SetFirstAsk(double ask_A);
+         //void SetFirstAsk(double ask_A);
     
-         void SetFirstBid(double bid_A);
+         //void SetFirstBid(double bid_A);
 
          void SetCurrVol(int vol_A);
+
+        void SetClosePrice(double clPrice_A);
 
          void InsertNewHistoryData(HistoricalTickLast currBar_A);
 
@@ -28,10 +30,14 @@ namespace SmartTRD.DB
 
          bool VolAsReceivd();
 
-         bool AskAndBidAsReceived();
+         //bool AskAndBidAsReceived();
 
          bool ContractAsReceived();
-         double GetFirstBid();
-        double GetFirstAsk();
+
+        bool ClosePriceAsReceived();
+
+        double GetClosePrice();
+        // double GetFirstBid();
+        //double GetFirstAsk();
     }
 }

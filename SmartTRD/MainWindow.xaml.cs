@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MahApps.Metro.Controls;
 using System.Net;
+using System.Globalization;
 
 namespace SmartTRD
 {
@@ -36,6 +37,7 @@ namespace SmartTRD
         private BidAskAlgoDB m_bidAskAlgoDbP;
         private BidAskAlgo m_bidAskAlgoP;
         private ReqIdMng m_reqIdMngP;
+        private static MainWindow m_instanse;
 
         public MainWindow()
         {
@@ -46,9 +48,11 @@ namespace SmartTRD
             m_stkDbP = null;
             m_testImpl = null;
             m_reqIdMngP = null;
+            m_instanse = this;
 
             CreatePackage();
             InitAll();
+            ReadDataFromXmlAndLoadToGUI();
 
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("FZMD");
             //string ret = Http.HttpOtcMarket.GetStrFromOtcMarket("NNRX");
@@ -62,8 +66,13 @@ namespace SmartTRD
             //js.StkAsVerfiedProfile(out date);
             //m_scnMngP.StartScanStkProcess();
 
-  
-           //m_bidAskAlgoP.StartAskBidAlgoOnline("PBYA", "20210923",500000);
+
+
+        }
+
+        public static MainWindow GetInstanse()
+        {
+            return m_instanse;
         }
 
         public void CreatePackage()
@@ -90,28 +99,92 @@ namespace SmartTRD
             m_reqIdMngP.Init();
         }
 
+        public void ReadDataFromXmlAndLoadToGUI()
+        {
+            // === AskBid combo box - symbols ===
+            XML.XmlLoad<List<string>> conLoad = new XML.XmlLoad<List<string>>();
+            try
+            {
+                List<string> cntFromXml = conLoad.loadData("symbolCmnBidAskAlgo.xml");
+
+                foreach(string sym in cntFromXml)
+                {
+                    g_bidAskAlgoSymName_cmb.Items.Add(sym);
+                }
+            }
+            catch (Exception) { }
+            // === AskBid combo box - symbols ===
+        }
+
         private void g_connect_bt_Click(object sender, RoutedEventArgs e)
         {
-            IPAddress ip;
-            int port;
-            if(IPAddress.TryParse(g_ip_tb.Text,out ip) == false)
+            if (g_connect_bt.Content.ToString() == "Disconnect")
             {
-                MessageBox.Show("Please insert legall ip and try again", "Error Ip", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            if(int.TryParse(g_port_tb.Text,out port) == false)
-            {
-                MessageBox.Show("Please insert legall port and try again", "Error Port", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+                m_bClientP.DisconnectFromClientTws();
+                g_mainTab_tbc.IsEnabled = false;
+                g_connect_bt.Content = "Connect";
+                g_conStatus_br.Background = Brushes.Red;
 
-            m_bClientP.connectToIbClientTWS(g_ip_tb.Text, port, 1);
-
-            if(m_bClientP.TwsIsConnectedToApp())
+            }
+            else
             {
-                g_mainTab_tbc.IsEnabled = true;
-                g_connect_bt.Content = "Disconnect";
-                g_conStatus_br.Background = Brushes.Green;
+                IPAddress ip;
+                int port;
+                if (IPAddress.TryParse(g_ip_tb.Text, out ip) == false)
+                {
+                    MessageBox.Show("Please insert legall ip and try again", "Error Ip", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                if (int.TryParse(g_port_tb.Text, out port) == false)
+                {
+                    MessageBox.Show("Please insert legall port and try again", "Error Port", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                m_bClientP.connectToIbClientTWS(g_ip_tb.Text, port, 1);
+
+                if (m_bClientP.TwsIsConnectedToApp())
+                {
+                    g_mainTab_tbc.IsEnabled = true;
+                    g_connect_bt.Content = "Disconnect";
+                    g_conStatus_br.Background = Brushes.LightGreen;
+                }
+            }        
+        }
+
+        private void g_bisAskAlgoStAnz_bt_Click(object sender, RoutedEventArgs e)
+        {
+            if (g_bisAskAlgoStAnz_bt.Content.ToString() == "STOP ANALYZE")
+            {
+                m_bidAskAlgoP.StopBidAskAlgo();
+            }
+            else
+            {
+                if (g_bidAskAlgoSymName_cmb.Text == "")
+                {
+                    MessageBox.Show("Please insert symbol name and try again", "Error Symbol", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                int excMax;
+                CultureInfo cul = new CultureInfo("en-US");
+                if (int.TryParse(g_bidAskAlgoMaxExc_tb.Text, System.Globalization.NumberStyles.Any, cul, out excMax) == false)
+                {
+                    MessageBox.Show("Please insert legall number,for example:500,000", "Error Execption", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                DateTime dt = new DateTime();
+                try
+                {
+                    dt = g_bidAskDateLst_dpc.SelectedDate.Value;
+                }
+                catch (Exception e1)
+                {
+                    MessageBox.Show("Please insert last trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                g_bisAskAlgoStAnz_bt.Content = "STOP ANALYZE";
+
+                m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, dt.ToString("yyyyMMdd"), excMax);
             }
         }
     }

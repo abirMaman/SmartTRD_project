@@ -109,24 +109,6 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute +
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
-
-            switch (m_reqIdMngP.GetActionReqFronDic(tickerId))
-            {
-                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
-                    break;
-                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                        if (m_mktDataType == 2)//Freeze
-                        {
-                            if (field == 1)//Bid
-                                m_bidAskAlgoDB.SetFirstBid(price);
-                            if (field == 2)//Ask
-                                m_bidAskAlgoDB.SetFirstAsk(price);
-                           
-                        }
-                    break;
-                default:
-                    break;
-            }  
         }
         //! [tickprice]
 
@@ -143,7 +125,7 @@ namespace SmartTRD.IBclient
                     if (m_mktDataType == 1)
                     {
                         if (field == 8)//Volume
-                            m_bidAskAlgoDB.SetCurrVol((int)size);
+                            m_bidAskAlgoDB.SetCurrVol((int)size);              
                     }
                     break;
                 default:
@@ -432,11 +414,12 @@ namespace SmartTRD.IBclient
                     m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
                     break;
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                    //if (reqId == m_bidAskAlgoP.GetAskReqId() && m_bidAskAlgoDB.GetFirstAsk() == 0)
+                    m_bidAskAlgoDB.SetClosePrice(bar.Close);
+                    //if (reqId == m_bidAskAlgoP.GetAskReqId())
                     //{
                     //    m_bidAskAlgoDB.SetFirstAsk(bar.Close);
                     //}
-                    //else if (reqId == m_bidAskAlgoP.GetBidReqId() && m_bidAskAlgoDB.GetFirstBid() == 0)
+                    //else if (reqId == m_bidAskAlgoP.GetBidReqId())
                     //{
                     //    m_bidAskAlgoDB.SetFirstBid(bar.Close);
                     //}
@@ -567,6 +550,7 @@ namespace SmartTRD.IBclient
                     break;
 
             }
+
             m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [historicaldataend]

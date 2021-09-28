@@ -50,6 +50,18 @@ namespace SmartTRD.IBclient
            return m_clientSocket.IsConnected();
         }
 
+        public void DisconnectFromClientTws()
+        {
+            try
+            {
+                m_clientSocket.eDisconnect();
+            }
+            catch (Exception e1)
+            {
+
+            }
+        }
+
         public bool connectToIbClientTWS(string ip_A, int port_A, int clientId_A)
         {
              m_clientSocket = m_testImpl.ClientSocket;
@@ -82,6 +94,8 @@ namespace SmartTRD.IBclient
                 return false;
             }
 
+         
+
             ////! [cashcfd]
             Contract contract = new Contract();
             contract.Symbol = "PBYA";
@@ -98,8 +112,8 @@ namespace SmartTRD.IBclient
             //! [stkcontractwithprimary]
             //! [cashcfd]
 
-           // m_clientSocket.reqMarketDataType(2);
-            //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
+            //m_clientSocket.reqMarketDataType(1);
+           //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
              String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
             string time = "20210922 16:30:00";
@@ -107,19 +121,19 @@ namespace SmartTRD.IBclient
             DateTime tt = new DateTime(2021, 09, 22, 16, 30, 00);
             DateTime tt1 = new DateTime(2021, 09, 22, 16, 30, 10);
             double ttee =  tt1.Subtract(tt).TotalSeconds;
-            string time1 = "20210921 23:00:00";
+            string time1 = "20210927 23:00:00";
             string timee = "20210923-15:00:00 +03:00";
             string []e = timee.Split();
             //DateTime ddd =  DateTime.ParseExact(timee, "yyyyMMdd-HH:mm:ss",CultureInfo.InvariantCulture);
 
             //m_clientSocket.reqRealTimeBars(3001, contract, 5, "MIDPOINT", true, null);
             //String queryTimeEnd = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
-            //m_clientSocket.reqHistoricalData(4005, contract, null, "1 D", "5 secs", "TRADES", 1, 1, true, null);//Save for algo!!!!!
+           // m_clientSocket.reqHistoricalData(4005, contract, time1, "1 D", "1 day", "TRADES", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK_BID", 1, 1, false, null);//Save for algo!!!!!
-           // m_clientSocket.reqHistoricalData(4004, contract, time1, "1 D", "1 min", "BID", 1, 1, false, null);//Save for algo!!!!!
-           // m_clientSocket.reqHistoricalData(4006, contract, time1, "1 D", "1 min", "ASK", 1, 1, false, null);//Save for algo!!!!!
+            //m_clientSocket.reqHistoricalData(4004, contract, time1, "1 D", "1 min", "BID", 1, 1, false, null);//Save for algo!!!!!
+             //m_clientSocket.reqHistoricalData(4006, contract, time1, "1 D", "1 min", "ASK", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK", 1, 1, false, null);//Save for algo!!!!!
-            //m_clientSocket.reqHistoricalTicks(4005, contract, "", timec, 1000, "TRADES", 1, false, null);
+           // m_clientSocket.reqHistoricalTicks(4005, contract,"", time1, 1000, "TRADES", 1, false, null);
 
             //for (int i = 0; i < 300; i++)
             //{

@@ -12,24 +12,16 @@ namespace SmartTRD.DB
     class BidAskAlgoDB:iBidAskAlgoDB
     {
 
-        struct CONTRACT_FIRST_ASKBID_INFO_s
-        {
-            public double first_bid;
-            public double first_ask;
-        }
-
         static BidAskAlgoDB m_instase;
-        CONTRACT_FIRST_ASKBID_INFO_s m_firAskBid;
         List<HistoricalTickLast> m_lastHisData;
         int m_currVol;
+        double m_closePrice;
         Contract m_currContract;
 
         public BidAskAlgoDB()
         {
             m_currContract = null;
             m_lastHisData = null;
-            m_firAskBid.first_ask = 0.0;
-            m_firAskBid.first_bid = 0.0;
             m_currVol = 0;
             m_instase = this;
         }
@@ -44,13 +36,19 @@ namespace SmartTRD.DB
             return m_instase;
         }
 
+   
+
         public void StartNewSession()
         {
             m_currContract = null;
             m_lastHisData = null;
-            m_firAskBid.first_ask = 0.0;
-            m_firAskBid.first_bid = 0.0;
-            m_currVol = 0;
+             m_closePrice = 0.0;
+             m_currVol = 0;
+        }
+
+        public void SetClosePrice(double clPrice_A)
+        {
+            m_closePrice = clPrice_A;
         }
 
         public void SetContract(Contract con_A)
@@ -62,15 +60,6 @@ namespace SmartTRD.DB
         public Contract GetCurrContract()
         {
             return m_currContract;
-        }
-
-        public void SetFirstAsk(double ask_A)
-        {
-            m_firAskBid.first_ask = ask_A;
-        }
-        public void SetFirstBid(double bid_A)
-        {
-            m_firAskBid.first_bid = bid_A;
         }
 
         public void SetCurrVol(int vol_A)
@@ -86,18 +75,13 @@ namespace SmartTRD.DB
         }
         public int GetCurrVol()
         {
-            int tempVol = m_currVol;
+            int tempVol = m_currVol * 100;
             m_currVol = 0;
             return tempVol;
         }
-
-        public double GetFirstBid()
+         public double GetClosePrice()
         {
-            return m_firAskBid.first_bid;
-        }
-        public double GetFirstAsk()
-        {
-            return m_firAskBid.first_ask;
+            return m_closePrice;
         }
 
         public List<HistoricalTickLast> GetHistoryData()
@@ -118,9 +102,9 @@ namespace SmartTRD.DB
             return m_currVol != 0;
         }
 
-        public bool AskAndBidAsReceived()
+        public bool ClosePriceAsReceived()
         {
-            return (m_firAskBid.first_ask != 0 && m_firAskBid.first_bid != 0);
+            return m_closePrice != 0;
         }
 
         public bool ContractAsReceived()
