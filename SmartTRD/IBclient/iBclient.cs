@@ -17,6 +17,8 @@ namespace SmartTRD.IBclient
         int GetNextReqId();
         void GetHistorySymbolDataTickByTick(Contract contrast_A, string st_time_A,string end_time_A, int maxTicks_A, string whatToShow_A);
         void GetMktData(int mktType_A, Contract contrart_A);
+        bool isConnected();
+
 
     }
 }

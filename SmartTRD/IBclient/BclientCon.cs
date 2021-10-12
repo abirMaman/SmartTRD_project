@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using IBApi;
 using Newtonsoft.Json.Linq;
 
@@ -89,8 +90,9 @@ namespace SmartTRD.IBclient
                 { IsBackground = true }.Start();
                 //! [ereader]
             }
-            catch(Exception)
+            catch(Exception e2)
             {
+                MessageBox.Show("Error to connect ,exception info : " + e2.Message.ToString(), "Connect Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -113,11 +115,11 @@ namespace SmartTRD.IBclient
             //! [cashcfd]
 
             //m_clientSocket.reqMarketDataType(1);
-           //m_clientSocket.reqMktData(111, contract, string.Empty, false, false, null);
+             //m_clientSocket.reqMktData(111, contract, string.Empty, true, false, null);
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
              String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
             string time = "20210922 16:30:00";
-            string timec = "20210924 23:00:00";
+            string timec = "20211006 15:00:00";
             DateTime tt = new DateTime(2021, 09, 22, 16, 30, 00);
             DateTime tt1 = new DateTime(2021, 09, 22, 16, 30, 10);
             double ttee =  tt1.Subtract(tt).TotalSeconds;
@@ -128,12 +130,14 @@ namespace SmartTRD.IBclient
 
             //m_clientSocket.reqRealTimeBars(3001, contract, 5, "MIDPOINT", true, null);
             //String queryTimeEnd = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
-           // m_clientSocket.reqHistoricalData(4005, contract, time1, "1 D", "1 day", "TRADES", 1, 1, false, null);//Save for algo!!!!!
+          // m_clientSocket.reqHistoricalData(4005, contract, time1, "1 D", "1 day", "TRADES", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK_BID", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4004, contract, time1, "1 D", "1 min", "BID", 1, 1, false, null);//Save for algo!!!!!
              //m_clientSocket.reqHistoricalData(4006, contract, time1, "1 D", "1 min", "ASK", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK", 1, 1, false, null);//Save for algo!!!!!
-           // m_clientSocket.reqHistoricalTicks(4005, contract,"", time1, 1000, "TRADES", 1, false, null);
+             //m_clientSocket.reqHistoricalTicks(4005, contract, timec, "", 1000, "BID_ASK", 1, false, null);
+           // m_clientSocket.reqHistoricalTicks(4006, contract, timec, "", 1000, "TRADES", 1, false, null);
+            //m_clientSocket.reqHistoricalTicks(4006, contract, timec, "", 1000, "MIDPOINT", 1, false, null);
 
             //for (int i = 0; i < 300; i++)
             //{
@@ -185,6 +189,11 @@ namespace SmartTRD.IBclient
       
         }
 
+        public bool isConnected()
+        {
+           return  m_clientSocket.IsConnected();
+        }
+
         public void GetSymbolDetails(string symbol_A)
         {
             if(m_clientSocket != null)
@@ -199,7 +208,7 @@ namespace SmartTRD.IBclient
             if (m_clientSocket != null)
             {
                  m_clientSocket.reqMarketDataType(mktType_A);
-                m_clientSocket.reqMktData(++m_reqId, contrart_A, string.Empty, false, false, null);
+                m_clientSocket.reqMktData(++m_reqId, contrart_A, string.Empty, true, false, null);
             }
         }
 
@@ -252,6 +261,27 @@ namespace SmartTRD.IBclient
             scanSub.ScanCode = scanCode_A;//MOST_ACTIVE,HOT_BY_VOLUME,TOP_PERC_GAIN,HIGH_OPT_VOLUME_PUT_CALL_RATIO
             m_clientSocket.reqScannerSubscription(++m_reqId, scanSub, "", null);
 
+        }
+
+        public void StartPnl()
+        {
+            Thread pnlT = new Thread(PnlThread);
+            pnlT.Start();
+        }
+   
+
+        private void PnlThread()
+        {
+                DateTime endOfMarket = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 09, 00, 02).AddDays(1);
+                object dt = null;
+                do
+                {
+                    dt = DateTime.Now;
+                    m_clientSocket.reqPnLSingle(++m_reqId, "DUD00029", "", 265502217);
+                    Thread.Sleep(1000);
+
+                } while ((DateTime)dt < endOfMarket);
+           
         }
 
     }

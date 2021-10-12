@@ -2,6 +2,7 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using IBApi;
@@ -840,10 +841,46 @@ namespace SmartTRD.IBclient
         }
         //! [pnl]
 
+        //=========== Temp =========
+        StreamWriter wr = null;
+        bool isClose = false;
+        double last = 0;
         //! [pnlsingle]
         public void pnlSingle(int reqId, int pos, double dailyPnL, double unrealizedPnL, double realizedPnL, double value)
         {
+        
             Console.WriteLine("PnL Single. Request Id: {0}, Pos {1}, Daily PnL {2}, Unrealized PnL {3}, Realized PnL: {4}, Value: {5}", reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value);
+
+            if (wr == null)
+                wr = new StreamWriter("pnl.txt");
+
+            DateTime endOfMarket = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 10, 00, 00).AddDays(1);
+            DateTime dt = DateTime.Now;
+
+            if(dt < endOfMarket)
+            {
+                if (last != dailyPnL)
+                {
+                    last = dailyPnL;
+                    wr.WriteLine(dt.ToString("yyyyMMdd HH:mm:ss") + " - PnL Single. Request Id: {0}, Daily PnL {1} Change!!!!", reqId, dailyPnL);
+                }
+                else
+                {
+                    wr.WriteLine(dt.ToString("yyyyMMdd HH:mm:ss") + " - PnL Single. Request Id: {0}, Daily PnL {1},", reqId, dailyPnL);
+                }
+
+                
+
+            }
+            else
+            {
+                if (isClose == false)
+                {
+                    isClose = true;
+                    wr.Close();
+                }
+            }
+               
         }
         //! [pnlsingle]
 
@@ -865,6 +902,21 @@ namespace SmartTRD.IBclient
                 Console.WriteLine("Historical Tick Bid/Ask. Request Id: {0}, Time: {1}, Price Bid: {2}, Price Ask: {3}, Size Bid: {4}, Size Ask: {5}, Bid/Ask Tick Attribs: {6} ",
                     reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.PriceBid, tick.PriceAsk, tick.SizeBid, tick.SizeAsk, tick.TickAttribBidAsk);
             }
+
+            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
+            {
+                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
+                    m_bidAskAlgoDB.SetBidAskPriceToDb(reqId, ticks);
+
+                    //m_bidAskAlgoDB.SetBidPrice(ticks[0].PriceBid);
+                    //m_bidAskAlgoDB.SetAskPrice(ticks[0].PriceAsk);
+                    break;
+                default:
+                    break;
+
+            }
+
+            m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [historicalticksbidask]
 
@@ -879,7 +931,7 @@ namespace SmartTRD.IBclient
                 switch (m_reqIdMngP.GetActionReqFronDic(reqId))
                 {
                     case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                        m_bidAskAlgoDB.InsertNewHistoryData(tick);
+                        m_bidAskAlgoDB.InsertNewHistoryData(reqId,tick);
                         break;
                     default:
                         break;

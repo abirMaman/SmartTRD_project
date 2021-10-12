@@ -38,6 +38,9 @@
     <Reference Include="CSharpAPI">
       <HintPath>..\..\..\..\..\..\TWS API\source\CSharpClient\client\bin\Debug\net45\CSharpAPI.dll</HintPath>
     </Reference>
+    <Reference Include="FontAwesome.WPF">
+      <HintPath>D:\פרוייקטים\פרויקט גמר\CodeProject\Versions\ServerVer\ver_12\ServerLec\TcpServerClient\bin\Debug\FontAwesome.WPF.dll</HintPath>
+    </Reference>
     <Reference Include="MahApps.Metro">
       <HintPath>..\..\..\..\Desktop\WedForRon\Wedding\Wedding\bin\Debug\MahApps.Metro.dll</HintPath>
     </Reference>
@@ -77,6 +80,7 @@
     <Compile Include="Http\HttpOtcMarket.cs" />
     <Compile Include="JsonAnalyzer\JsonStkInfo.cs" />
     <Compile Include="JsonAnalyzer\JsonStkStmbolInfo.cs" />
+    <Compile Include="LogHandler\LogHandler.cs" />
     <Compile Include="ReqId\iReqIdMng.cs" />
     <Compile Include="ReqId\ReqIdMng.cs" />
     <Compile Include="Scanner\iScannerMng.cs" />

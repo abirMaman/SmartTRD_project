@@ -9,8 +9,11 @@ namespace SmartTRD.ReqId
 {
     interface iReqIdMng
     {
-        void InsertReqToDic(int reqId_A, ACTION_REQ_e action_A);
+        void InsertReqToDic(int reqId_A, ACTION_REQ_e action_A, string codeAction_A = "");
         ACTION_REQ_e GetActionReqFronDic(int req_A);
+
+        ACTION_REC_INFO_s GetActionReqInfoFronDic(int req_A);
+
         void RemoveActionFromDic(int req_A);
     }
 }

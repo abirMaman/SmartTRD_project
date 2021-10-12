@@ -20,6 +20,7 @@ using System.Windows.Shapes;
 using MahApps.Metro.Controls;
 using System.Net;
 using System.Globalization;
+using SmartTRD.LogHandle;
 
 namespace SmartTRD
 {
@@ -68,6 +69,7 @@ namespace SmartTRD
 
 
 
+
         }
 
         public static MainWindow GetInstanse()
@@ -85,6 +87,7 @@ namespace SmartTRD
             m_bidAskAlgoP = new BidAskAlgo();
             m_bidAskAlgoDbP = new BidAskAlgoDB();
             m_reqIdMngP = new ReqIdMng();
+            LogHandler.Init();
             
         }
 
@@ -149,6 +152,7 @@ namespace SmartTRD
                     g_connect_bt.Content = "Disconnect";
                     g_conStatus_br.Background = Brushes.LightGreen;
                 }
+
             }        
         }
 
@@ -186,6 +190,11 @@ namespace SmartTRD
 
                 m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, dt.ToString("yyyyMMdd"), excMax);
             }
+        }
+
+        private void MetroWindow_Closed(object sender, EventArgs e)
+        {
+            int x = 1;
         }
     }
 }

@@ -24,31 +24,27 @@ namespace SmartTRD.BidAsk_Algo
         //}
         struct ASK_BID_VOLS_INFO_s
         {
-            public double prevPrice;
             public double currPrice;
+            public double curr_ask;
+            public double curr_bid;
             public long askSize;
             public long bidSize;
             public int tradeVol;
             public int dollarVol;
+            public long unreported;
             public int countMaxTrdStkBid;
             public long countSizeOfTrdStkBid;
             public int countMaxTrdStkAsk;
             public long countSizeOfTrdStkAsk;
         }
 
-        struct REQ_INFO_s
-        {
-            public int actReqId;
-            public bool reqReceiveAnw;
-        }
 
         struct HISTORY_VOL_REQ_INFO_s
         {
             public bool wakeUpFromTimeOut;
-            public REQ_INFO_s[] reqInfoArr;
-
         }
 
+        private static int m_diffBetweenREQ = 20;//[SEC]
         private static BidAskAlgo m_instase;
         private ASK_BID_VOLS_INFO_s m_bidAskVolRes;
         private HISTORY_VOL_REQ_INFO_s m_hisInfo;
@@ -58,9 +54,13 @@ namespace SmartTRD.BidAsk_Algo
         private MainWindow m_mainWindowP;
         private string m_symbol;
         private string m_lstTrdData;
-        private int m_maxTrdSizeForMark_A;
+        private int m_maxTrdSizeForMark;
         private bool m_stopAnalyze;
         private DateTime m_firstTime;
+        private DateTime m_bidAskLstTime;
+        private bool m_firstTimeWasSet;
+        private bool m_bidAskTimeWasSet;
+        private bool m_stkisRaised;
 
         public BidAskAlgo()
         {
@@ -68,8 +68,11 @@ namespace SmartTRD.BidAsk_Algo
             m_bidAskDb = null;
             m_reqIdMngP = null;
             m_mainWindowP = null;
+            m_stkisRaised = false;
+            m_firstTimeWasSet = false;
+            m_bidAskTimeWasSet = false;
             m_symbol = "";
-            m_maxTrdSizeForMark_A = 0;
+            m_maxTrdSizeForMark = 0;
             m_instase = this;
         }
 
@@ -88,11 +91,15 @@ namespace SmartTRD.BidAsk_Algo
         public void StartAskBidAlgoOnline(string symbol_A, string lstTrdDate_A, int maxTrdSizeForMark_A)
         {
             m_symbol = symbol_A;
-            m_maxTrdSizeForMark_A = maxTrdSizeForMark_A;
+            m_maxTrdSizeForMark = maxTrdSizeForMark_A;
             m_lstTrdData = lstTrdDate_A;
             m_stopAnalyze = false;
+            m_stkisRaised = false;
+            m_firstTimeWasSet = false;
+            m_bidAskTimeWasSet = false;
             m_bidAskVolRes = new ASK_BID_VOLS_INFO_s();
             m_bidAskDb.StartNewSession();
+            InitGUI();
 
             Thread stAlgoT = new Thread(StartAlgoThread);
             stAlgoT.Start();
@@ -110,6 +117,9 @@ namespace SmartTRD.BidAsk_Algo
 
             if (StepClosePriceFirst() == false)//Step 2
                 return;
+
+            //if (StepBidAskPriceFirst() == false)//Step 3
+            //   return;
 
             StartReceiveHisAndAnalyze();
         }
@@ -154,7 +164,7 @@ namespace SmartTRD.BidAsk_Algo
             try
             {
                 cntFromXml = conLoad.loadData("symbolCmnBidAskAlgo.xml");
-                    
+
             }
             catch (Exception) { }
 
@@ -202,10 +212,7 @@ namespace SmartTRD.BidAsk_Algo
             else
             {
                 m_bidAskVolRes.currPrice = m_bidAskDb.GetClosePrice();
-                //m_bidAskVolRes.askPrice = m_bidAskDb.GetFirstAsk();
-                //m_bidAskVolRes.bidPrice = m_bidAskDb.GetFirstBid();
                 Console.WriteLine("Close Price = " + m_bidAskVolRes.currPrice);
-                //Console.WriteLine("first bid price by date = " + m_lstTrdData + " is : " + m_bidAskVolRes.bidPrice);
             }
 
             m_reqIdMngP.RemoveActionFromDic(reqId);
@@ -213,44 +220,107 @@ namespace SmartTRD.BidAsk_Algo
             return closePriceAsReceived;
         }
 
+        private bool StepBidAskPriceFirst()
+        {
+            bool bidAskPriceAsReceived = false;
+            int countSleep = 0;
+            DateTime bidAskStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 16, 30, 00).AddDays(-2);//33333
+
+            int reqIdBidAsk = m_clientP.GetNextReqId();
+            m_reqIdMngP.InsertReqToDic(reqIdBidAsk, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO, "BID");
+            m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), bidAskStart.ToString("yyyyMMdd HH:mm:ss"), "", 1, "BID_ASK");//Save for algo!!!!!
+
+            Thread.Sleep(5000);
+
+            while (bidAskPriceAsReceived == false && countSleep < 5000)
+            {
+                bidAskPriceAsReceived = m_bidAskDb.BidAsRecevied() && m_bidAskDb.AskAsRecevied();
+
+                if (bidAskPriceAsReceived == false)
+                {
+                    Thread.Sleep(50);
+                    countSleep += 50;
+                }
+            }
+            if (bidAskPriceAsReceived == false)
+            {
+                MessageBox.Show(m_symbol + " not recevied bid ask price of last trade day", "Error Close Price", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                m_bidAskVolRes.curr_bid = m_bidAskDb.GetBidPrice();
+                m_bidAskVolRes.curr_ask = m_bidAskDb.GetAskPrice();
+                Console.WriteLine("first bid Price = " + m_bidAskVolRes.curr_bid);
+                Console.WriteLine("first ask Price = " + m_bidAskVolRes.curr_ask);
+            }
+
+            m_reqIdMngP.RemoveActionFromDic(reqIdBidAsk);
+
+            return bidAskPriceAsReceived;
+        }
+
         private void StartReceiveHisAndAnalyze()
         {
-
-            m_firstTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 15, 00, 00);
-            DateTime endOfMarket = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 00, 00);
+            int trdReqId = 0, volReqId = 0, bidAskReqId = 0;
+            m_firstTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 16, 30, 00);
+            DateTime endOfMarket = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 00, 15);
+            m_bidAskLstTime = m_firstTime;
             object currTime = null;
 
             do
             {
                 currTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
-                       DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+                      DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
 
-                //currTime = new DateTime(2021, 09, 27,
+                //currTime = new DateTime(2021, 10, 01,
                 //       23, 00, 00);
 
                 double diff = ((DateTime)currTime).Subtract(m_firstTime).TotalSeconds;
 
-                if (diff >= 10)
+                if (diff >= m_diffBetweenREQ)
                 {
-                    m_hisInfo = new HISTORY_VOL_REQ_INFO_s();
-                    m_hisInfo.reqInfoArr = new REQ_INFO_s[2];
+                    m_bidAskTimeWasSet = false;
+                    m_firstTimeWasSet = false;
 
-                    m_hisInfo.reqInfoArr[0].actReqId = m_clientP.GetNextReqId();//Bid Ask
-                    m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[0].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
                     Console.WriteLine("time first = " + m_firstTime.ToString("yyyyMMdd HH:mm:ss" + " time curr = " + ((DateTime)currTime).ToString("yyyyMMdd HH:mm:ss")));
+                    m_hisInfo.wakeUpFromTimeOut = false;
+
+                    bidAskReqId = m_clientP.GetNextReqId();//Bid Ask
+                    m_reqIdMngP.InsertReqToDic(bidAskReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), m_bidAskLstTime.ToString("yyyyMMdd HH:mm:ss"), "", 1000, "BID_ASK");
+
+
+                    trdReqId = m_clientP.GetNextReqId();//Bid Ask
+                    m_reqIdMngP.InsertReqToDic(trdReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    m_bidAskDb.SetNewReqAndPrepare(trdReqId);
                     m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), m_firstTime.ToString("yyyyMMdd HH:mm:ss"), "", 1000, "TRADES");
 
-                    m_hisInfo.reqInfoArr[1].actReqId = m_clientP.GetNextReqId();//Vol
-                    m_reqIdMngP.InsertReqToDic(m_hisInfo.reqInfoArr[1].actReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    volReqId = m_clientP.GetNextReqId();//Vol
+                    m_reqIdMngP.InsertReqToDic(volReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
                     m_clientP.GetMktData(1, m_bidAskDb.GetCurrContract());
 
-                    Thread anlThr = new Thread(() => WaitAndGetHistoryData(m_firstTime));
+                    Thread anlThr = new Thread(() => WaitAndGetHistoryData(trdReqId, volReqId, bidAskReqId));
                     anlThr.Start();
 
-                    Thread.Sleep(9990);
-                    m_hisInfo.wakeUpFromTimeOut = true;
-                    m_firstTime = (DateTime)currTime;
+                    Thread.Sleep(m_diffBetweenREQ * 1000);
 
+                    m_hisInfo.wakeUpFromTimeOut = true;
+
+                    anlThr.Join();
+
+                    if (m_firstTimeWasSet == false)
+                        m_firstTime = (DateTime)currTime;
+                    else
+                    {
+                        Console.WriteLine("first time to set by previos cycle to time = ", m_firstTime.ToString("yyyyMMdd HH:mm:ss"));
+                        m_firstTime.AddSeconds(1);
+                    }
+                    if (m_bidAskTimeWasSet == false)
+                    {
+                        m_bidAskLstTime = m_firstTime;
+                    }
+
+                   
                 }
                 else
                 {
@@ -258,107 +328,222 @@ namespace SmartTRD.BidAsk_Algo
                 }
 
             }
-            while (DateTime.Now < endOfMarket && m_stopAnalyze == false);
+            while (DateTime.Now < endOfMarket && m_stopAnalyze == false && m_clientP.isConnected());
 
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                   m_mainWindowP.g_bisAskAlgoStAnz_bt.Content = "START ANALYZE";
+                m_mainWindowP.g_bisAskAlgoStAnz_bt.Content = "START ANALYZE";
             });
 
-            MessageBox.Show("Bid Ask Algorithm end!!!!","Info",MessageBoxButton.OK,MessageBoxImage.Information);
+            m_hisInfo.wakeUpFromTimeOut = true;
+
+            MessageBox.Show("Bid Ask Algorithm end!!!!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        private void WaitAndGetHistoryData(DateTime firstTime_A)
+        private void WaitAndGetHistoryData(int trdReqId_A, int volReqId_A, int bidAskReqId_A)
         {
-            Thread.Sleep(3000);//Wait for update
-            bool allDataReceivd = false;
-            bool stkisRaised = false;
+            Thread.Sleep(2000);//Wait for update
 
-            while (allDataReceivd == false &&
-                m_hisInfo.wakeUpFromTimeOut == false)
+            HistoricalTickBidAsk[] bidAskDB = null;
+            bool volAsReceived = false;
+            bool bidAskDbReceived = false;
+            int prevCount = 0;
+            int gloabalCnt = 0;
+            object lstTrdTime = null;
+
+            while (m_hisInfo.wakeUpFromTimeOut == false)
             {
-                m_hisInfo.reqInfoArr[0].reqReceiveAnw = m_bidAskDb.HistoryDataAsReceived();
-                m_hisInfo.reqInfoArr[1].reqReceiveAnw = m_bidAskDb.VolAsReceivd();
+                bool hisAsUpdate = false;
 
-                allDataReceivd = m_hisInfo.reqInfoArr[0].reqReceiveAnw && m_hisInfo.reqInfoArr[1].reqReceiveAnw;
-
-                if (m_hisInfo.reqInfoArr[0].reqReceiveAnw)
+                if (!bidAskDbReceived)
                 {
-                    List<HistoricalTickLast> hisDataList = m_bidAskDb.GetHistoryData();
-                    foreach (HistoricalTickLast his in hisDataList)
+                    if (bidAskDbReceived = m_bidAskDb.BidAskDbAsRecevied(bidAskReqId_A) == true)
                     {
+                        HandleWithSpin(true);
+                        bidAskDB = m_bidAskDb.GetHisBidAskDb(bidAskReqId_A);
+                        Console.WriteLine("History bid Ask as received , req id = " + bidAskReqId_A + " , num of size = " + (bidAskDB.Length));
+                    }
+                }
+
+                if (!volAsReceived)
+                {
+                    volAsReceived = m_bidAskDb.VolAsReceivd();
+
+                    m_bidAskVolRes.tradeVol = m_bidAskDb.GetCurrVol();
+
+                    Console.WriteLine("Vol as received , req id = " + volReqId_A + " , vol size = " + m_bidAskVolRes.tradeVol);
+                }
+
+                HistoricalTickLast[] hisDataList = m_bidAskDb.GetHistoryData(trdReqId_A);
+
+                if (bidAskDbReceived &&
+                    prevCount != hisDataList.Length)//Update
+                {
+                    Console.WriteLine("History as received , req id = " + trdReqId_A + " , num of size = " + (hisDataList.Length - prevCount));
+
+                    for (int i = prevCount; i < hisDataList.Length; i++)
+                    {
+                        HistoricalTickLast his = hisDataList[i];
+
                         string[] date = Util.UnixSecondsToString(his.Time, "yyyyMMdd-HH:mm:ss zzz").Split();
 
                         DateTime trdTime = DateTime.ParseExact(date[0], "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture).AddHours(3);
-                        if (trdTime >= firstTime_A)
+
+                        if (trdTime >= m_firstTime)
                         {
-                            if (m_bidAskVolRes.currPrice > his.Price ||
-                                (his.Price == m_bidAskVolRes.currPrice && stkisRaised == false))//Sum Ask
+                            lstTrdTime = trdTime;
+                            gloabalCnt++;
+
+                            if (his.TickAttribLast.Unreported)
                             {
-                                stkisRaised = false;
-                                m_bidAskVolRes.currPrice = his.Price;
-                                m_bidAskVolRes.askSize += his.Size;
-
-                                if (his.Size >= m_maxTrdSizeForMark_A)
-                                {
-                                    m_bidAskVolRes.countMaxTrdStkAsk++;
-                                    m_bidAskVolRes.countSizeOfTrdStkAsk += his.Size;
-                                }
-
+                                m_bidAskVolRes.unreported += his.Size;
                             }
                             else
                             {
-                                stkisRaised = true;
-                                m_bidAskVolRes.currPrice = his.Price;
-                                m_bidAskVolRes.bidSize += his.Size;
-
-                                if (his.Size >= m_maxTrdSizeForMark_A)
+                                switch (CheckIfTradeIsBidOrAsk(bidAskDB, his))
                                 {
-                                    m_bidAskVolRes.countMaxTrdStkBid++;
-                                    m_bidAskVolRes.countSizeOfTrdStkBid += his.Size;
+                                    case "ASK":
+                                        m_bidAskVolRes.askSize += his.Size;
+
+                                        if (his.Size >= m_maxTrdSizeForMark)
+                                        {
+                                            m_bidAskVolRes.countMaxTrdStkAsk++;
+                                            m_bidAskVolRes.countSizeOfTrdStkAsk += his.Size;
+                                        }
+                                        break;
+                                    case "BID":
+                                        m_bidAskVolRes.bidSize += his.Size;
+
+                                        if (his.Size >= m_maxTrdSizeForMark)
+                                        {
+                                            m_bidAskVolRes.countMaxTrdStkBid++;
+                                            m_bidAskVolRes.countSizeOfTrdStkBid += his.Size;
+                                        }
+                                        break;
+                                    case "NONE":
+                                        break;
+                                }
+
+                                if (m_bidAskVolRes.currPrice > his.Price ||
+                                    (his.Price == m_bidAskVolRes.currPrice && m_stkisRaised == false))//Sum Ask
+                                {
+                                    m_stkisRaised = false;
+                                    m_bidAskVolRes.currPrice = his.Price;
+                                    //m_bidAskVolRes.askSize += his.Size;
+
+                                }
+                                else
+                                {
+                                    m_stkisRaised = true;
+                                    m_bidAskVolRes.currPrice = his.Price;
+                                    // m_bidAskVolRes.bidSize += his.Size;                             
                                 }
                             }
-
-                            if (his.Price != m_bidAskVolRes.currPrice)
-                                m_bidAskVolRes.prevPrice = m_bidAskVolRes.currPrice;
-
                         }
+
+                        prevCount = hisDataList.Length;
+                        hisAsUpdate = true;
                     }
                 }
-                if (m_hisInfo.reqInfoArr[1].reqReceiveAnw)
+
+                if (hisAsUpdate)
                 {
-                    m_bidAskVolRes.tradeVol = m_bidAskDb.GetCurrVol();
+                    HandleWithGUI((DateTime)lstTrdTime);           
+                    Thread.Sleep(500);
                 }
 
-
             }
-            Console.WriteLine("prev price = " + m_bidAskVolRes.prevPrice + " , curr price = " + m_bidAskVolRes.currPrice);
-            Console.WriteLine("ask size = " + m_bidAskVolRes.askSize + "Exc ask cnt = " + m_bidAskVolRes.countMaxTrdStkAsk + " Exc ask size = " + m_bidAskVolRes.countSizeOfTrdStkAsk);
-            Console.WriteLine("bid size = " + m_bidAskVolRes.bidSize + "Exc bid cnt = " + m_bidAskVolRes.countMaxTrdStkBid + " Exc bid size = " + m_bidAskVolRes.countSizeOfTrdStkBid);
+
+            if (gloabalCnt >= 1000 && lstTrdTime != null)
+            {
+                m_firstTime = (DateTime)lstTrdTime;
+                m_firstTimeWasSet = true;
+            }
+
+            //Save last BID_ASK time
+            if(bidAskDB!= null && bidAskDB.Length > 0)
+            {
+                string[] date = Util.UnixSecondsToString(bidAskDB[bidAskDB.Length-1].Time, "yyyyMMdd-HH:mm:ss zzz").Split();
+                m_bidAskLstTime = DateTime.ParseExact(date[0], "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture).AddHours(3);
+                m_bidAskTimeWasSet = true;
+            }
+
+            
+            Console.WriteLine("curr price = " + m_bidAskVolRes.currPrice);
+            Console.WriteLine("ask size = " + m_bidAskVolRes.askSize + " Exc ask cnt = " + m_bidAskVolRes.countMaxTrdStkAsk + " Exc ask size = " + m_bidAskVolRes.countSizeOfTrdStkAsk);
+            Console.WriteLine("bid size = " + m_bidAskVolRes.bidSize + " Exc bid cnt = " + m_bidAskVolRes.countMaxTrdStkBid + " Exc bid size = " + m_bidAskVolRes.countSizeOfTrdStkBid);
             Console.WriteLine("curr vol = " + m_bidAskVolRes.tradeVol);
 
-            if (allDataReceivd)
+            m_reqIdMngP.RemoveActionFromDic(trdReqId_A);
+            m_reqIdMngP.RemoveActionFromDic(volReqId_A);
+            m_reqIdMngP.RemoveActionFromDic(bidAskReqId_A);
+
+            HandleWithSpin(false);
+        }
+
+        private string CheckIfTradeIsBidOrAsk(HistoricalTickBidAsk[] bidAskDb_A, HistoricalTickLast trdInfo_A)
+        {
+            string ret = "NONE";
+            int i = 0;
+
+            string[] dateTrd = Util.UnixSecondsToString(trdInfo_A.Time, "yyyyMMdd-HH:mm:ss zzz").Split();
+
+            DateTime trdTime = DateTime.ParseExact(dateTrd[0], "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture).AddHours(3);
+            string[] dateBidAsk = null;
+            DateTime bidAskTime;
+
+            for (i = 0; i < bidAskDb_A.Length; i++)
             {
-                HandleWithGUI();
-                //Update GUI
+                dateBidAsk = Util.UnixSecondsToString(bidAskDb_A[i].Time, "yyyyMMdd-HH:mm:ss zzz").Split();
+
+                bidAskTime = DateTime.ParseExact(dateBidAsk[0], "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture).AddHours(3);
+
+                if (bidAskTime >= trdTime)
+                    break;
             }
 
-            m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[0].actReqId);
-            m_reqIdMngP.RemoveActionFromDic(m_hisInfo.reqInfoArr[1].actReqId);
+            for (int j = i - 1; j >= 0; j--)
+            {
+                if (bidAskDb_A[j].PriceAsk <= trdInfo_A.Price ||
+                    trdInfo_A.Price < bidAskDb_A[j].PriceAsk && trdInfo_A.Price > bidAskDb_A[j].PriceBid)
+                {
+                    ret = "ASK";
+                    break;
+                }
+                else if (bidAskDb_A[j].PriceBid >= trdInfo_A.Price)
+                {
+                    ret = "BID";
+                    break;
+                }
+            }
+
+            return ret;
         }
-        private void HandleWithGUI()
+
+        private void HandleWithSpin(bool spin_A)
+        {
+            Application.Current.Dispatcher.Invoke((Action)delegate
+            {
+                m_mainWindowP.g_bidAskAlgoSpin_sp.Spin = spin_A;
+            });
+        }
+
+        private void InitGUI()
         {
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 CultureInfo cul = new CultureInfo("en-US");
-                m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Text = m_bidAskVolRes.currPrice.ToString();
-                m_mainWindowP.g_askSizeBidAskAlgo_tb.Text = m_bidAskVolRes.askSize.ToString("N",cul).Replace(".00", "");
-                m_mainWindowP.g_bidSizeBidAskAlgo_tb.Text = m_bidAskVolRes.bidSize.ToString("N", cul).Replace(".00","");
-                m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = m_bidAskVolRes.tradeVol.ToString("N", cul).Replace(".00", "");
-                m_mainWindowP.g_bidAskAlgoVolDol_tb.Text = (m_bidAskVolRes.currPrice * m_bidAskVolRes.tradeVol).ToString("N", cul) + "$";
-                m_mainWindowP.g_bidCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkBid.ToString();
-                m_mainWindowP.g_askCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkAsk.ToString();
-                m_mainWindowP.g_bidMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countSizeOfTrdStkBid.ToString("N", cul).Replace(".00", "");
-                m_mainWindowP.g_askMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countSizeOfTrdStkAsk.ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Text = "0.0";
+                m_mainWindowP.g_askSizeBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_bidSizeBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = "0";
+                m_mainWindowP.g_bidAskAlgoVolDol_tb.Text = "0" + "$";
+                m_mainWindowP.g_bidCntMaxBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_askCntMaxBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_bidMaxBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_askMaxBidAskAlgo_tb.Text = "0";
+                m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = "0";
+                m_mainWindowP.g_bidAslAlgolstTrdTime_tb.Text = "";
+                m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = "0";
 
 
                 //Color GUI
@@ -366,18 +551,44 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_askSizeBidAskAlgo_tb.Foreground = Brushes.Black;
                 m_mainWindowP.g_bidSizeBidAskAlgo_tb.Background = Brushes.White;
                 m_mainWindowP.g_bidSizeBidAskAlgo_tb.Foreground = Brushes.Black;
-                if (m_bidAskVolRes.askSize > m_bidAskVolRes.bidSize)
-                {
-                    m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.Red;
-                    m_mainWindowP.g_askSizeBidAskAlgo_tb.Foreground = Brushes.White;
-                }
-                else if(m_bidAskVolRes.askSize < m_bidAskVolRes.bidSize)
-                {
-                    m_mainWindowP.g_bidSizeBidAskAlgo_tb.Background = Brushes.LightGreen;
-                }
-    
             });
         }
+        private void HandleWithGUI(DateTime lstTrdTime_A)
+        {
+            Application.Current.Dispatcher.Invoke((Action)delegate
+            {
+                CultureInfo cul = new CultureInfo("en-US");
+                m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Text = m_bidAskVolRes.currPrice.ToString();
+                m_mainWindowP.g_askSizeBidAskAlgo_tb.Text = m_bidAskVolRes.askSize.ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidSizeBidAskAlgo_tb.Text = m_bidAskVolRes.bidSize.ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = (m_bidAskVolRes.tradeVol - (int)m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAskAlgoVolDol_tb.Text = (m_bidAskVolRes.currPrice * m_bidAskVolRes.tradeVol).ToString("N", cul) + "$";
+                m_mainWindowP.g_bidCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkBid.ToString();
+                m_mainWindowP.g_askCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkAsk.ToString();
+                m_mainWindowP.g_bidMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countSizeOfTrdStkBid.ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_askMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countSizeOfTrdStkAsk.ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = (m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAslAlgolstTrdTime_tb.Text = lstTrdTime_A.ToString("ddMMyyyy HH:mm:ss");
+
+                //Color GUI
+                m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.White;
+                m_mainWindowP.g_askSizeBidAskAlgo_tb.Foreground = Brushes.Black;
+                m_mainWindowP.g_bidSizeBidAskAlgo_tb.Background = Brushes.White;
+                m_mainWindowP.g_bidSizeBidAskAlgo_tb.Foreground = Brushes.Black;
+                if (m_bidAskVolRes.askSize < m_bidAskVolRes.bidSize)
+                {
+                    m_mainWindowP.g_bidSizeBidAskAlgo_tb.Background = Brushes.Red;
+                    m_mainWindowP.g_bidSizeBidAskAlgo_tb.Foreground = Brushes.White;
+                }
+                else if (m_bidAskVolRes.askSize > m_bidAskVolRes.bidSize)
+                {
+                    m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.LightGreen;
+                }
+
+            });
+        }
+
+
     }
     }
 
