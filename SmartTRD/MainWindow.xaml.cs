@@ -144,7 +144,10 @@ namespace SmartTRD
                     return;
                 }
 
-                m_bClientP.connectToIbClientTWS(g_ip_tb.Text, port, 1);
+                int cid = 1;
+                int.TryParse(g_clientId_tb.Text, out cid);
+
+                m_bClientP.connectToIbClientTWS(g_ip_tb.Text, port, cid);
 
                 if (m_bClientP.TwsIsConnectedToApp())
                 {
@@ -175,10 +178,10 @@ namespace SmartTRD
                     MessageBox.Show("Please insert legall number,for example:500,000", "Error Execption", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                DateTime dt = new DateTime();
+                DateTime lstTrdDay = new DateTime();
                 try
                 {
-                    dt = g_bidAskDateLst_dpc.SelectedDate.Value;
+                    lstTrdDay = g_bidAskDateLst_dpc.SelectedDate.Value;
                 }
                 catch (Exception e1)
                 {
@@ -188,13 +191,47 @@ namespace SmartTRD
 
                 g_bisAskAlgoStAnz_bt.Content = "STOP ANALYZE";
 
-                m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, dt.ToString("yyyyMMdd"), excMax);
+                if (g_bidAskUseRTH_chb.IsChecked == true)
+                {
+                    m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, lstTrdDay.ToString("yyyyMMdd"), excMax);
+                }
+                else
+                {
+                    DateTime firTrdDay = new DateTime();
+                    try
+                    {
+                        firTrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
+                    }
+                    catch (Exception e1)
+                    {
+                        MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    m_bidAskAlgoP.StartAskBidAlgoOffline(g_bidAskAlgoSymName_cmb.Text, firTrdDay.ToString("yyyyMMdd"), lstTrdDay.ToString("yyyyMMdd"), excMax);
+                }
             }
         }
 
         private void MetroWindow_Closed(object sender, EventArgs e)
         {
-            int x = 1;
+            if (MessageBox.Show("Are you sure??", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                m_bClientP.DisconnectFromClientTws();
+                m_bidAskAlgoP.StopBidAskAlgo();
+            }
+        }
+
+        private void g_bidAskUseRTH_chb_Click(object sender, RoutedEventArgs e)
+        {
+            if (g_bidAskUseRTH_chb.IsChecked == true)
+            {
+                g_bidAskDateFirst_dpc.IsEnabled = false;
+            }
+            else
+            {
+                g_bidAskDateFirst_dpc.IsEnabled = true;
+            }
         }
     }
 }

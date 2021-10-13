@@ -24,13 +24,13 @@ namespace SmartTRD.BidAsk_Algo
         //}
         struct ASK_BID_VOLS_INFO_s
         {
+            public double openPrice;
             public double currPrice;
             public double curr_ask;
             public double curr_bid;
             public long askSize;
             public long bidSize;
             public int tradeVol;
-            public int dollarVol;
             public long unreported;
             public int countMaxTrdStkBid;
             public long countSizeOfTrdStkBid;
@@ -54,6 +54,7 @@ namespace SmartTRD.BidAsk_Algo
         private MainWindow m_mainWindowP;
         private string m_symbol;
         private string m_lstTrdData;
+        private string m_firstTrdData;//For offline
         private int m_maxTrdSizeForMark;
         private bool m_stopAnalyze;
         private DateTime m_firstTime;
@@ -61,6 +62,7 @@ namespace SmartTRD.BidAsk_Algo
         private bool m_firstTimeWasSet;
         private bool m_bidAskTimeWasSet;
         private bool m_stkisRaised;
+        private Thread m_stTrdP;
 
         public BidAskAlgo()
         {
@@ -72,6 +74,8 @@ namespace SmartTRD.BidAsk_Algo
             m_firstTimeWasSet = false;
             m_bidAskTimeWasSet = false;
             m_symbol = "";
+            m_lstTrdData = "";
+            m_firstTrdData = "";
             m_maxTrdSizeForMark = 0;
             m_instase = this;
         }
@@ -88,11 +92,10 @@ namespace SmartTRD.BidAsk_Algo
             m_reqIdMngP = ReqIdMng.GetInstanse();
             m_mainWindowP = MainWindow.GetInstanse();
         }
-        public void StartAskBidAlgoOnline(string symbol_A, string lstTrdDate_A, int maxTrdSizeForMark_A)
+
+        private void PrepareToNewRound()
         {
-            m_symbol = symbol_A;
-            m_maxTrdSizeForMark = maxTrdSizeForMark_A;
-            m_lstTrdData = lstTrdDate_A;
+        
             m_stopAnalyze = false;
             m_stkisRaised = false;
             m_firstTimeWasSet = false;
@@ -100,14 +103,35 @@ namespace SmartTRD.BidAsk_Algo
             m_bidAskVolRes = new ASK_BID_VOLS_INFO_s();
             m_bidAskDb.StartNewSession();
             InitGUI();
+        }
+        public void StartAskBidAlgoOnline(string symbol_A, string lstTrdDate_A, int maxTrdSizeForMark_A)
+        {
+            PrepareToNewRound();
 
-            Thread stAlgoT = new Thread(StartAlgoThread);
-            stAlgoT.Start();
+            m_symbol = symbol_A;
+            m_maxTrdSizeForMark = maxTrdSizeForMark_A;
+            m_lstTrdData = lstTrdDate_A;
+
+            m_stTrdP = new Thread(StartAlgoThread);
+            m_stTrdP.Start();
+        }
+        public void StartAskBidAlgoOffline(string symbol_A, string firTrdDate_A,string lstTrdDate_A, int maxTrdSizeForMark_A)
+        {
+            PrepareToNewRound();
+
+            m_symbol = symbol_A;
+            m_maxTrdSizeForMark = maxTrdSizeForMark_A;
+            m_lstTrdData = lstTrdDate_A;
+            m_firstTrdData = firTrdDate_A;
+
+            m_stTrdP = new Thread(StartAlgoThreadOffline);
+            m_stTrdP.Start();
         }
 
         public void StopBidAskAlgo()
         {
             m_stopAnalyze = true;
+            //m_stTrdP.Abort();
         }
 
         private void StartAlgoThread()
@@ -118,10 +142,17 @@ namespace SmartTRD.BidAsk_Algo
             if (StepClosePriceFirst() == false)//Step 2
                 return;
 
-            //if (StepBidAskPriceFirst() == false)//Step 3
-            //   return;
-
             StartReceiveHisAndAnalyze();
+        }
+        private void StartAlgoThreadOffline()
+        {
+            if (StepGetSymbol() == false)//Step 1
+                return;
+
+            if (StepClosePriceFirst() == false)//Step 2
+                return;
+
+            StartReceiveHisAndAnalyzeOffline();
         }
 
 
@@ -212,6 +243,7 @@ namespace SmartTRD.BidAsk_Algo
             else
             {
                 m_bidAskVolRes.currPrice = m_bidAskDb.GetClosePrice();
+                m_bidAskVolRes.openPrice = m_bidAskVolRes.currPrice;
                 Console.WriteLine("Close Price = " + m_bidAskVolRes.currPrice);
             }
 
@@ -258,6 +290,70 @@ namespace SmartTRD.BidAsk_Algo
 
             return bidAskPriceAsReceived;
         }
+        private void StartReceiveHisAndAnalyzeOffline()
+        {
+            int trdReqId = 0, volReqId = 0, bidAskReqId = 0;
+            string startInDate = m_firstTrdData + " " + "16:30:00";
+            string endInDate =  m_firstTrdData + " " + "23:00:15";
+            m_firstTime = DateTime.ParseExact(startInDate, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            DateTime endOfMarket = DateTime.ParseExact(endInDate, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            m_bidAskLstTime = m_firstTime;
+            object currTime = null;
+
+            do
+            {
+                    m_bidAskTimeWasSet = false;
+                    m_firstTimeWasSet = false;
+
+                    Console.WriteLine("time first = " + m_firstTime.ToString("yyyyMMdd HH:mm:ss" + " time curr = " + ((DateTime)currTime).ToString("yyyyMMdd HH:mm:ss")));
+                    m_hisInfo.wakeUpFromTimeOut = false;
+
+                    bidAskReqId = m_clientP.GetNextReqId();//Bid Ask
+                    m_reqIdMngP.InsertReqToDic(bidAskReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), m_bidAskLstTime.ToString("yyyyMMdd HH:mm:ss"), "", 1000, "BID_ASK");
+
+
+                    trdReqId = m_clientP.GetNextReqId();//Bid Ask
+                    m_reqIdMngP.InsertReqToDic(trdReqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO);
+                    m_bidAskDb.SetNewReqAndPrepare(trdReqId);
+                    m_clientP.GetHistorySymbolDataTickByTick(m_bidAskDb.GetCurrContract(), m_firstTime.ToString("yyyyMMdd HH:mm:ss"), "", 1000, "TRADES");
+
+
+                    Thread anlThr = new Thread(() => WaitAndGetHistoryData(trdReqId, volReqId, bidAskReqId,true));
+                    anlThr.Start();
+
+                     SleepAndWaitT(m_diffBetweenREQ * 1000);
+
+                    m_hisInfo.wakeUpFromTimeOut = true;
+
+                    anlThr.Join();
+
+                    m_firstTime.AddSeconds(1);
+
+                    if (m_firstTimeWasSet == false)
+                        m_firstTime = (DateTime)currTime;
+                    else
+                    {
+                        Console.WriteLine("first time to set by previos cycle to time = ", m_firstTime.ToString("yyyyMMdd HH:mm:ss"));
+                        
+                    }
+                    if (m_bidAskTimeWasSet == false)
+                    {
+                        m_bidAskLstTime = m_firstTime;
+                    }
+
+            }
+            while (m_firstTime < endOfMarket && m_stopAnalyze == false && m_clientP.isConnected());
+
+            Application.Current.Dispatcher.Invoke((Action)delegate
+            {
+                m_mainWindowP.g_bisAskAlgoStAnz_bt.Content = "START ANALYZE";
+            });
+
+            m_hisInfo.wakeUpFromTimeOut = true;
+
+            MessageBox.Show("Bid Ask Algorithm end!!!!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
 
         private void StartReceiveHisAndAnalyze()
         {
@@ -302,7 +398,7 @@ namespace SmartTRD.BidAsk_Algo
                     Thread anlThr = new Thread(() => WaitAndGetHistoryData(trdReqId, volReqId, bidAskReqId));
                     anlThr.Start();
 
-                    Thread.Sleep(m_diffBetweenREQ * 1000);
+                    SleepAndWaitT(m_diffBetweenREQ * 1000);
 
                     m_hisInfo.wakeUpFromTimeOut = true;
 
@@ -339,7 +435,17 @@ namespace SmartTRD.BidAsk_Algo
 
             MessageBox.Show("Bid Ask Algorithm end!!!!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        private void WaitAndGetHistoryData(int trdReqId_A, int volReqId_A, int bidAskReqId_A)
+
+        private void SleepAndWaitT(int timeInMilSec_A)
+        {
+            int countSleep = 0;
+            while ((countSleep%timeInMilSec_A) !=0 && (m_stopAnalyze == false) && m_clientP.isConnected())
+            {
+                Thread.Sleep(500);
+                countSleep += 500;
+            }
+        }
+        private void WaitAndGetHistoryData(int trdReqId_A, int volReqId_A, int bidAskReqId_A,bool offline_A = false)
         {
             Thread.Sleep(2000);//Wait for update
 
@@ -447,13 +553,18 @@ namespace SmartTRD.BidAsk_Algo
 
                 if (hisAsUpdate)
                 {
-                    HandleWithGUI((DateTime)lstTrdTime);           
+                    HandleWithGUI((DateTime)lstTrdTime,offline_A);           
                     Thread.Sleep(500);
+                }
+                else
+                {
+                    Thread.Sleep(200);
                 }
 
             }
 
-            if (gloabalCnt >= 1000 && lstTrdTime != null)
+            if ((gloabalCnt >= 1000 && lstTrdTime != null) ||
+                offline_A)
             {
                 m_firstTime = (DateTime)lstTrdTime;
                 m_firstTimeWasSet = true;
@@ -529,6 +640,8 @@ namespace SmartTRD.BidAsk_Algo
 
         private void InitGUI()
         {
+            HandleWithSpin(false);
+
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 CultureInfo cul = new CultureInfo("en-US");
@@ -544,6 +657,7 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = "0";
                 m_mainWindowP.g_bidAslAlgolstTrdTime_tb.Text = "";
                 m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = "0";
+                m_mainWindowP.g_bidAslAlgoDiff_tb.Text = "0";
 
 
                 //Color GUI
@@ -553,7 +667,7 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidSizeBidAskAlgo_tb.Foreground = Brushes.Black;
             });
         }
-        private void HandleWithGUI(DateTime lstTrdTime_A)
+        private void HandleWithGUI(DateTime lstTrdTime_A,bool offlineMode_A)
         {
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
@@ -561,7 +675,11 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Text = m_bidAskVolRes.currPrice.ToString();
                 m_mainWindowP.g_askSizeBidAskAlgo_tb.Text = m_bidAskVolRes.askSize.ToString("N", cul).Replace(".00", "");
                 m_mainWindowP.g_bidSizeBidAskAlgo_tb.Text = m_bidAskVolRes.bidSize.ToString("N", cul).Replace(".00", "");
-                m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = (m_bidAskVolRes.tradeVol - (int)m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
+                m_mainWindowP.g_bidAslAlgoDiff_tb.Text = Math.Abs(m_bidAskVolRes.askSize - m_bidAskVolRes.bidSize).ToString();
+                if(offlineMode_A == false)
+                     m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = (m_bidAskVolRes.tradeVol - (int)m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
+                else
+                    m_mainWindowP.g_bidAskAlgoVolTrade_tb.Text = ((m_bidAskVolRes.askSize + m_bidAskVolRes.bidSize) - (int)m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
                 m_mainWindowP.g_bidAskAlgoVolDol_tb.Text = (m_bidAskVolRes.currPrice * m_bidAskVolRes.tradeVol).ToString("N", cul) + "$";
                 m_mainWindowP.g_bidCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkBid.ToString();
                 m_mainWindowP.g_askCntMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countMaxTrdStkAsk.ToString();
@@ -582,13 +700,19 @@ namespace SmartTRD.BidAsk_Algo
                 }
                 else if (m_bidAskVolRes.askSize > m_bidAskVolRes.bidSize)
                 {
-                    m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.LightGreen;
+                    if (m_bidAskVolRes.currPrice < m_bidAskVolRes.openPrice)
+                    {
+                        m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.Red;
+                        m_mainWindowP.g_bidSizeBidAskAlgo_tb.Foreground = Brushes.White;
+                    }
+                    else
+                    {
+                        m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.LightGreen;
+                    }
                 }
 
             });
         }
-
-
     }
     }
 
