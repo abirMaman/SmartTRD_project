@@ -21,6 +21,7 @@ using MahApps.Metro.Controls;
 using System.Net;
 using System.Globalization;
 using SmartTRD.LogHandle;
+using System.Threading;
 
 namespace SmartTRD
 {
@@ -50,6 +51,8 @@ namespace SmartTRD
             m_testImpl = null;
             m_reqIdMngP = null;
             m_instanse = this;
+
+            
 
             CreatePackage();
             InitAll();
@@ -87,12 +90,12 @@ namespace SmartTRD
             m_bidAskAlgoP = new BidAskAlgo();
             m_bidAskAlgoDbP = new BidAskAlgoDB();
             m_reqIdMngP = new ReqIdMng();
-            LogHandler.Init();
-            
+                 
         }
 
         public void InitAll()
         {
+            LogHandler.Init();
             m_testImpl.Init();
             m_bClientP.Init(m_testImpl);          
             m_scnMngP.Init();
@@ -190,10 +193,14 @@ namespace SmartTRD
                 }
 
                 g_bisAskAlgoStAnz_bt.Content = "STOP ANALYZE";
-
+                int refRate = 0;
+                if( int.TryParse(g_bidAskRefRate_tb.Text,out refRate) == false)
+                {
+                    refRate = 20;
+                }
                 if (g_bidAskUseRTH_chb.IsChecked == true)
                 {
-                    m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, lstTrdDay.ToString("yyyyMMdd"), excMax);
+                    m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, lstTrdDay.ToString("yyyyMMdd"), excMax, refRate);
                 }
                 else
                 {
@@ -208,17 +215,8 @@ namespace SmartTRD
                         return;
                     }
 
-                    m_bidAskAlgoP.StartAskBidAlgoOffline(g_bidAskAlgoSymName_cmb.Text, firTrdDay.ToString("yyyyMMdd"), lstTrdDay.ToString("yyyyMMdd"), excMax);
+                    m_bidAskAlgoP.StartAskBidAlgoOffline(g_bidAskAlgoSymName_cmb.Text, firTrdDay.ToString("yyyyMMdd"), lstTrdDay.ToString("yyyyMMdd"), excMax, refRate);
                 }
-            }
-        }
-
-        private void MetroWindow_Closed(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Are you sure??", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                m_bClientP.DisconnectFromClientTws();
-                m_bidAskAlgoP.StopBidAskAlgo();
             }
         }
 
@@ -231,6 +229,22 @@ namespace SmartTRD
             else
             {
                 g_bidAskDateFirst_dpc.IsEnabled = true;
+            }
+        }
+
+
+        private void MetroWindow_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure??", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                m_bClientP.DisconnectFromClientTws();
+                m_bidAskAlgoP.StopBidAskAlgo();
+                LogHandler.CloseFile();
+                Thread.Sleep(1000);
+            }
+            else
+            {
+                e.Cancel = true;
             }
         }
     }

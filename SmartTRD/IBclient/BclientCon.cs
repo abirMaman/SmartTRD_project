@@ -92,6 +92,7 @@ namespace SmartTRD.IBclient
             }
             catch(Exception e2)
             {
+                LogHandle.LogHandler.WriteToFile("Error to connect ,exception info : " + e2.Message.ToString());
                 MessageBox.Show("Error to connect ,exception info : " + e2.Message.ToString(), "Connect Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }

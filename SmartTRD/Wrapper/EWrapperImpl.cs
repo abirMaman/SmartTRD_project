@@ -8,6 +8,7 @@ using System.Text;
 using IBApi;
 using SmartTRD.BidAsk_Algo;
 using SmartTRD.DB;
+using SmartTRD.LogHandle;
 using SmartTRD.ReqId;
 using SmartTRD.Scanner;
 
@@ -77,12 +78,14 @@ namespace SmartTRD.IBclient
         public virtual void error(string str)
         {
             Console.WriteLine("Error: " + str + "\n");
+            LogHandler.WriteToFile("Error: " + str + "\n");
         }
 
         //! [error]
         public virtual void error(int id, int errorCode, string errorMsg)
         {
             Console.WriteLine("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
+            LogHandler.WriteToFile("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
             switch (m_reqIdMngP.GetActionReqFronDic(id))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
@@ -98,17 +101,21 @@ namespace SmartTRD.IBclient
         public virtual void connectionClosed()
         {
             Console.WriteLine("Connection closed.\n");
+            LogHandler.WriteToFile("Connection closed.\n");
         }
 
         public virtual void currentTime(long time)
         {
             Console.WriteLine("Current Time: " + time + "\n");
+            LogHandler.WriteToFile("Current Time: " + time + "\n");
         }
 
         //! [tickprice]
         public virtual void tickPrice(int tickerId, int field, double price, TickAttrib attribs)
         {
             Console.WriteLine("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute +
+                ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
+            LogHandler.WriteToFile("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute +
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
         }
         //! [tickprice]
@@ -117,7 +124,7 @@ namespace SmartTRD.IBclient
         public virtual void tickSize(int tickerId, int field, long size)
         {
             Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + size);
-
+            LogHandler.WriteToFile("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + size);
             switch (m_reqIdMngP.GetActionReqFronDic(tickerId))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
@@ -263,9 +270,11 @@ namespace SmartTRD.IBclient
         public virtual void contractDetails(int reqId, ContractDetails contractDetails)
         {
             Console.WriteLine("ContractDetails begin. ReqId: " + reqId);
+            LogHandler.WriteToFile("ContractDetails begin. ReqId: " + reqId);
             printContractMsg(contractDetails.Contract);
             printContractDetailsMsg(contractDetails);
             Console.WriteLine("ContractDetails end. ReqId: " + reqId);
+            LogHandler.WriteToFile("ContractDetails end. ReqId: " + reqId);
         }
         //! [contractdetails]
 
@@ -288,29 +297,53 @@ namespace SmartTRD.IBclient
         public void printContractDetailsMsg(ContractDetails contractDetails)
         {
             Console.WriteLine("\tMarketName: " + contractDetails.MarketName);
+            LogHandler.WriteToFile("\tMarketName: " + contractDetails.MarketName);
             Console.WriteLine("\tMinTick: " + contractDetails.MinTick);
+            LogHandler.WriteToFile("\tMinTick: " + contractDetails.MinTick);
             Console.WriteLine("\tPriceMagnifier: " + contractDetails.PriceMagnifier);
+            LogHandler.WriteToFile("\tPriceMagnifier: " + contractDetails.PriceMagnifier);
             Console.WriteLine("\tOrderTypes: " + contractDetails.OrderTypes);
+            LogHandler.WriteToFile("\tOrderTypes: " + contractDetails.OrderTypes);
             Console.WriteLine("\tValidExchanges: " + contractDetails.ValidExchanges);
+            LogHandler.WriteToFile("\tValidExchanges: " + contractDetails.ValidExchanges);
             Console.WriteLine("\tUnderConId: " + contractDetails.UnderConId);
+            LogHandler.WriteToFile("\tUnderConId: " + contractDetails.UnderConId);
             Console.WriteLine("\tLongName: " + contractDetails.LongName);
+            LogHandler.WriteToFile("\tLongName: " + contractDetails.LongName);
             Console.WriteLine("\tContractMonth: " + contractDetails.ContractMonth);
+            LogHandler.WriteToFile("\tContractMonth: " + contractDetails.ContractMonth);
             Console.WriteLine("\tIndystry: " + contractDetails.Industry);
+            LogHandler.WriteToFile("\tIndystry: " + contractDetails.Industry);
             Console.WriteLine("\tCategory: " + contractDetails.Category);
+            LogHandler.WriteToFile("\tCategory: " + contractDetails.Category);
             Console.WriteLine("\tSubCategory: " + contractDetails.Subcategory);
+            LogHandler.WriteToFile("\tSubCategory: " + contractDetails.Subcategory);
             Console.WriteLine("\tTimeZoneId: " + contractDetails.TimeZoneId);
+            LogHandler.WriteToFile("\tTimeZoneId: " + contractDetails.TimeZoneId);
             Console.WriteLine("\tTradingHours: " + contractDetails.TradingHours);
+            LogHandler.WriteToFile("\tTradingHours: " + contractDetails.TradingHours);
             Console.WriteLine("\tLiquidHours: " + contractDetails.LiquidHours);
+            LogHandler.WriteToFile("\tLiquidHours: " + contractDetails.LiquidHours);
             Console.WriteLine("\tEvRule: " + contractDetails.EvRule);
+            LogHandler.WriteToFile("\tEvRule: " + contractDetails.EvRule);
             Console.WriteLine("\tEvMultiplier: " + contractDetails.EvMultiplier);
+            LogHandler.WriteToFile("\tEvMultiplier: " + contractDetails.EvMultiplier);
             Console.WriteLine("\tMdSizeMultiplier: " + contractDetails.MdSizeMultiplier);
+            LogHandler.WriteToFile("\tMdSizeMultiplier: " + contractDetails.MdSizeMultiplier);
             Console.WriteLine("\tAggGroup: " + contractDetails.AggGroup);
+            LogHandler.WriteToFile("\tAggGroup: " + contractDetails.AggGroup);
             Console.WriteLine("\tUnderSymbol: " + contractDetails.UnderSymbol);
+            LogHandler.WriteToFile("\tUnderSymbol: " + contractDetails.UnderSymbol);
             Console.WriteLine("\tUnderSecType: " + contractDetails.UnderSecType);
+            LogHandler.WriteToFile("\tUnderSecType: " + contractDetails.UnderSecType);
             Console.WriteLine("\tMarketRuleIds: " + contractDetails.MarketRuleIds);
+            LogHandler.WriteToFile("\tMarketRuleIds: " + contractDetails.MarketRuleIds);
             Console.WriteLine("\tRealExpirationDate: " + contractDetails.RealExpirationDate);
+            LogHandler.WriteToFile("\tRealExpirationDate: " + contractDetails.RealExpirationDate);
             Console.WriteLine("\tLastTradeTime: " + contractDetails.LastTradeTime);
+            LogHandler.WriteToFile("\tLastTradeTime: " + contractDetails.LastTradeTime);
             Console.WriteLine("\tStock Type: " + contractDetails.StockType);
+            LogHandler.WriteToFile("\tStock Type: " + contractDetails.StockType);
             printContractDetailsSecIdList(contractDetails.SecIdList);
         }
 
@@ -405,8 +438,8 @@ namespace SmartTRD.IBclient
         public virtual void historicalData(int reqId, Bar bar)
         {
             Console.WriteLine("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
-
-            switch(m_reqIdMngP.GetActionReqFronDic(reqId))
+            LogHandler.WriteToFile("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
+            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
                     break;
@@ -492,8 +525,10 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("ScannerData. " + reqId + " - Rank: " + rank + ", Symbol: " + contractDetails.Contract.Symbol + ", SecType: " + contractDetails.Contract.SecType + ", Currency: " + contractDetails.Contract.Currency
                 + ", Distance: " + distance + ", Benchmark: " + benchmark + ", Projection: " + projection + ", Legs String: " + legsStr);
+            LogHandler.WriteToFile("ScannerData. " + reqId + " - Rank: " + rank + ", Symbol: " + contractDetails.Contract.Symbol + ", SecType: " + contractDetails.Contract.SecType + ", Currency: " + contractDetails.Contract.Currency
+                + ", Distance: " + distance + ", Benchmark: " + benchmark + ", Projection: " + projection + ", Legs String: " + legsStr);
 
-         
+
             switch (m_reqIdMngP.GetActionReqFronDic(reqId))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
@@ -511,6 +546,7 @@ namespace SmartTRD.IBclient
         public virtual void scannerDataEnd(int reqId)
         {
             Console.WriteLine("ScannerDataEnd. " + reqId);
+            LogHandler.WriteToFile("ScannerDataEnd. " + reqId);
             switch (m_reqIdMngP.GetActionReqFronDic(reqId))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
@@ -542,6 +578,7 @@ namespace SmartTRD.IBclient
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
         {
             Console.WriteLine("HistoricalDataEnd - " + reqId + " from " + startDate + " to " + endDate);
+            LogHandler.WriteToFile("HistoricalDataEnd - " + reqId + " from " + startDate + " to " + endDate);
             switch (m_reqIdMngP.GetActionReqFronDic(reqId))
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_SCANNER:
@@ -691,6 +728,10 @@ namespace SmartTRD.IBclient
                 Console.WriteLine("Contract: conId - {0}, symbol - {1}, secType - {2}, primExchange - {3}, currency - {4}, derivativeSecTypes - {5}",
                     contractDescription.Contract.ConId, contractDescription.Contract.Symbol, contractDescription.Contract.SecType,
                     contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes);
+
+                LogHandler.WriteToFile("Contract: conId - {0}, symbol - {1}, secType - {2}, primExchange - {3}, currency - {4}, derivativeSecTypes - {5}",
+                    contractDescription.Contract.ConId, contractDescription.Contract.Symbol, contractDescription.Contract.SecType,
+                    contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes);
             }
         }
         //! [symbolSamples]
@@ -798,6 +839,7 @@ namespace SmartTRD.IBclient
         public void histogramData(int reqId, HistogramEntry[] data)
         {
             Console.WriteLine("Histogram data. Request Id: {0}, data size: {1}", reqId, data.Length);
+            LogHandler.WriteToFile("Histogram data. Request Id: {0}, data size: {1}", reqId, data.Length);
             data.ToList().ForEach(i => Console.WriteLine("\tPrice: {0}, Size: {1}", i.Price, i.Size));
         }
         //! [histogramData]
@@ -813,6 +855,7 @@ namespace SmartTRD.IBclient
         public void rerouteMktDataReq(int reqId, int conId, string exchange)
         {
             Console.WriteLine("Re-route market data request. Req Id: {0}, ConId: {1}, Exchange: {2}", reqId, conId, exchange);
+            LogHandler.WriteToFile("Re-route market data request. Req Id: {0}, ConId: {1}, Exchange: {2}", reqId, conId, exchange);
         }
         //! [rerouteMktDataReq]
 
@@ -890,6 +933,8 @@ namespace SmartTRD.IBclient
             foreach (var tick in ticks)
             {
                 Console.WriteLine("Historical Tick. Request Id: {0}, Time: {1}, Price: {2}, Size: {3}", reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.Price, tick.Size);
+
+                LogHandler.WriteToFile("Historical Tick. Request Id: {0}, Time: {1}, Price: {2}, Size: {3}", reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.Price, tick.Size);
             }
         }
         //! [historicalticks]
@@ -900,6 +945,9 @@ namespace SmartTRD.IBclient
             foreach (var tick in ticks)
             {
                 Console.WriteLine("Historical Tick Bid/Ask. Request Id: {0}, Time: {1}, Price Bid: {2}, Price Ask: {3}, Size Bid: {4}, Size Ask: {5}, Bid/Ask Tick Attribs: {6} ",
+                    reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.PriceBid, tick.PriceAsk, tick.SizeBid, tick.SizeAsk, tick.TickAttribBidAsk);
+
+                LogHandler.WriteToFile("Historical Tick Bid/Ask. Request Id: {0}, Time: {1}, Price Bid: {2}, Price Ask: {3}, Size Bid: {4}, Size Ask: {5}, Bid/Ask Tick Attribs: {6} ",
                     reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.PriceBid, tick.PriceAsk, tick.SizeBid, tick.SizeAsk, tick.TickAttribBidAsk);
             }
 
@@ -927,6 +975,8 @@ namespace SmartTRD.IBclient
             {
                 Console.WriteLine("Historical Tick Last. Request Id: {0}, Time: {1}, Price: {2}, Size: {3}, Exchange: {4}, Special Conditions: {5}, Last Tick Attribs: {6} ",
                     reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.Price, tick.Size, tick.Exchange, tick.SpecialConditions, tick.TickAttribLast);
+                LogHandler.WriteToFile("Historical Tick Last. Request Id: {0}, Time: {1}, Price: {2}, Size: {3}, Exchange: {4}, Special Conditions: {5}, Last Tick Attribs: {6} ",
+                    reqId, Util.UnixSecondsToString(tick.Time, "yyyyMMdd-HH:mm:ss zzz"), tick.Price, tick.Size, tick.Exchange, tick.SpecialConditions, tick.TickAttribLast);
 
                 switch (m_reqIdMngP.GetActionReqFronDic(reqId))
                 {
@@ -946,6 +996,8 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("Tick-By-Tick. Request Id: {0}, TickType: {1}, Time: {2}, Price: {3}, Size: {4}, Exchange: {5}, Special Conditions: {6}, PastLimit: {7}, Unreported: {8}",
                 reqId, tickType == 1 ? "Last" : "AllLast", Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), price, size, exchange, specialConditions, tickAttribLast.PastLimit, tickAttribLast.Unreported);
+            LogHandler.WriteToFile("Tick-By-Tick. Request Id: {0}, TickType: {1}, Time: {2}, Price: {3}, Size: {4}, Exchange: {5}, Special Conditions: {6}, PastLimit: {7}, Unreported: {8}",
+                reqId, tickType == 1 ? "Last" : "AllLast", Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), price, size, exchange, specialConditions, tickAttribLast.PastLimit, tickAttribLast.Unreported);
         }
         //! [tickbytickalllast]
 
@@ -953,6 +1005,8 @@ namespace SmartTRD.IBclient
         public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, long bidSize, long askSize, TickAttribBidAsk tickAttribBidAsk)
         {
             Console.WriteLine("Tick-By-Tick. Request Id: {0}, TickType: BidAsk, Time: {1}, BidPrice: {2}, AskPrice: {3}, BidSize: {4}, AskSize: {5}, BidPastLow: {6}, AskPastHigh: {7}",
+                reqId, Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), bidPrice, askPrice, bidSize, askSize, tickAttribBidAsk.BidPastLow, tickAttribBidAsk.AskPastHigh);
+            LogHandler.WriteToFile("Tick-By-Tick. Request Id: {0}, TickType: BidAsk, Time: {1}, BidPrice: {2}, AskPrice: {3}, BidSize: {4}, AskSize: {5}, BidPastLow: {6}, AskPastHigh: {7}",
                 reqId, Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), bidPrice, askPrice, bidSize, askSize, tickAttribBidAsk.BidPastLow, tickAttribBidAsk.AskPastHigh);
         }
         //! [tickbytickbidask]
