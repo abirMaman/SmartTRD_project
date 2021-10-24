@@ -20,34 +20,32 @@ namespace SmartTRD.LogHandle
         private static List<string> m_fileLogs;
         private static bool m_closed;
 
-        public static void Init() 
+        public static void Init(int CID_A = 1) 
         {
             m_logs = new List<string>();
             m_fileLogs = new List<string>();
             m_closed = false;
-            string name = "Logs\\" +"LogSmarTrd_" + DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".txt";
+            string name = "Logs\\" +"LogSmarTrd_CIDN_" + CID_A.ToString() + "_" + DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".txt";
             if (Directory.Exists("Logs") == false)
                 Directory.CreateDirectory("Logs");
 
             m_fdP = new StreamWriter(name);
             m_mainWindowP = MainWindow.GetInstanse();
 
-            //Thread rtbT = new Thread(RitcTextBoxThr);
-            //rtbT.Start();
+            Thread rtbT = new Thread(RitcTextBoxThr);
+            rtbT.Start();
 
-            //Thread fileT = new Thread(WriteToFileT);
-            //fileT.Start();
+            Thread fileT = new Thread(WriteToFileT);
+            fileT.Start();
         }
 
         public static void WriteToFile(string msg_A)
         {
-            try
-            {
                 m_mutex.WaitOne();
 
                 if (m_fdP != null)
                 { 
-                    m_fileLogs.Add(msg_A);
+                    m_fileLogs.Add(DateTime.Now.ToString("HH:mm:ss") + " - " + msg_A);
 
                     // m_mainWindowP.g_logBox_rtb.AppendText(DateTime.Now.ToString("HH:mm:ss") + " - " + msg_A + Environment.NewLine);
                     // m_mainWindowP.g_logBox_rtb.ScrollToEnd();
@@ -58,8 +56,6 @@ namespace SmartTRD.LogHandle
                 m_mutex2.WaitOne();
                 m_logs.Add(DateTime.Now.ToString("HH:mm:ss") + " - " + msg_A + Environment.NewLine);
                 m_mutex2.ReleaseMutex();
-            }
-            catch(Exception e1) { }
         }
         public static void WriteToFile(string msg_A,params object [] args_A)
         {
@@ -67,7 +63,7 @@ namespace SmartTRD.LogHandle
 
                 if (m_fdP != null)
                 {
-                    string formatFile = String.Format(msg_A, args_A);
+                    string formatFile = String.Format(DateTime.Now.ToString("HH:mm:ss") + " - " + msg_A, args_A);
                     m_fileLogs.Add(formatFile);
                 }
 
@@ -130,36 +126,40 @@ namespace SmartTRD.LogHandle
             
             while(m_closed == false)
             {
-                bool clear = false;
-                m_mutex2.WaitOne();
+                bool update = false;
                 if(m_logs.Count !=0 )
-                {
-                    clear = true;
-                    foreach (string log in m_logs)
+                {                
+                    m_mutex2.WaitOne();
+                    update = true;
+                    string[] tempList = new string[m_logs.Count];
+                    m_logs.CopyTo(tempList);
+                    m_logs.Clear();
+                    m_mutex2.ReleaseMutex();
+
+                    foreach (string log in tempList)
                     {
                         Application.Current.Dispatcher.Invoke((Action)delegate
                         {
-                           m_mainWindowP.g_logBox_rtb.AppendText(log + Environment.NewLine);
+                            m_mainWindowP.g_logBox_lg.Items.Add(log);
                       
                         });
-                        Thread.Sleep(40);
+                        //Thread.Sleep(5);
                     }
                 }
-          
-
-                if (clear)
+                if (update)
                 {
                     Application.Current.Dispatcher.Invoke((Action)delegate
                     {
-                       m_mainWindowP.g_logBox_rtb.ScrollToEnd();
+                        m_mainWindowP.g_logBox_lg.Items.MoveCurrentToLast();
+                        m_mainWindowP.g_logBox_lg.ScrollIntoView(m_mainWindowP.g_logBox_lg.Items.CurrentItem);
                     });
 
-                    m_logs.Clear();
+                    //Thread.Sleep(20);
                 }
-
-                m_mutex2.ReleaseMutex();
-
-                Thread.Sleep(500);
+                else
+                {
+                    //Thread.Sleep(100);
+                }
 
             }
         }

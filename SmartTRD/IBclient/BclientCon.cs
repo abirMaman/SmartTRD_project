@@ -118,8 +118,8 @@ namespace SmartTRD.IBclient
             //m_clientSocket.reqMarketDataType(1);
              //m_clientSocket.reqMktData(111, contract, string.Empty, true, false, null);
             //m_clientSocket.reqHistogramData(1111, contract, true, "2 day");
-             String queryTime = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
-            string time = "20210922 16:30:00";
+             String queryTime = DateTime.Now.ToString("yyyyMMddW` HH:mm:ss");
+            string time = "20211023 16:30:00";
             string timec = "20211006 15:00:00";
             DateTime tt = new DateTime(2021, 09, 22, 16, 30, 00);
             DateTime tt1 = new DateTime(2021, 09, 22, 16, 30, 10);
@@ -131,7 +131,7 @@ namespace SmartTRD.IBclient
 
             //m_clientSocket.reqRealTimeBars(3001, contract, 5, "MIDPOINT", true, null);
             //String queryTimeEnd = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
-          // m_clientSocket.reqHistoricalData(4005, contract, time1, "1 D", "1 day", "TRADES", 1, 1, false, null);//Save for algo!!!!!
+          // m_clientSocket.reqHistoricalData(4005, contract, time, "60 S","1 secs", "TRADES", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4005, contract, time, "60 S", "1 secs", "ASK_BID", 1, 1, false, null);//Save for algo!!!!!
             //m_clientSocket.reqHistoricalData(4004, contract, time1, "1 D", "1 min", "BID", 1, 1, false, null);//Save for algo!!!!!
              //m_clientSocket.reqHistoricalData(4006, contract, time1, "1 D", "1 min", "ASK", 1, 1, false, null);//Save for algo!!!!!

@@ -181,18 +181,18 @@ namespace SmartTRD
                     MessageBox.Show("Please insert legall number,for example:500,000", "Error Execption", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                DateTime lstTrdDay = new DateTime();
+                DateTime TrdDay = new DateTime();
                 try
                 {
-                    lstTrdDay = g_bidAskDateLst_dpc.SelectedDate.Value;
+                    TrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
                 }
                 catch (Exception e1)
                 {
-                    MessageBox.Show("Please insert last trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                g_bisAskAlgoStAnz_bt.Content = "STOP ANALYZE";
+               
                 int refRate = 0;
                 if( int.TryParse(g_bidAskRefRate_tb.Text,out refRate) == false)
                 {
@@ -200,23 +200,54 @@ namespace SmartTRD
                 }
                 if (g_bidAskUseRTH_chb.IsChecked == true)
                 {
-                    m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, lstTrdDay.ToString("yyyyMMdd"), excMax, refRate);
+                    DateTime currTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                     DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+
+
+                    DateTime strTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                    16, 30,00);
+                    DateTime endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                    23, 05, 00);
+
+                    if (currTime >= strTime && currTime < endTime)
+                    {
+                        m_bidAskAlgoP.StartAskBidAlgoOnline(g_bidAskAlgoSymName_cmb.Text, excMax, refRate);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please wait to 16:30:00 for opening day trade time..", "Error Time", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+           
                 }
                 else
                 {
-                    DateTime firTrdDay = new DateTime();
-                    try
-                    {
-                        firTrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
-                    }
-                    catch (Exception e1)
-                    {
-                        MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //DateTime firTrdDay = new DateTime();
+                    //try
+                    //{
+                    //    firTrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
+                    //}
+                    //catch (Exception e1)
+                    //{
+                    //    MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //    return;
+                    //}
+
+                    string[] time = g_bidAskTimeToClose_tb.Text.Split(':');
+                    int hour, min, sec;
+                    if (int.TryParse(time[0], out hour) == false ||
+                        int.TryParse(time[0], out min) == false ||
+                        int.TryParse(time[0], out sec) == false ||
+                            time.Length != 3)
+                        {
+                        MessageBox.Show("Please inset valid time , for example : 23:00:00...", "Error Time", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
-
-                    m_bidAskAlgoP.StartAskBidAlgoOffline(g_bidAskAlgoSymName_cmb.Text, firTrdDay.ToString("yyyyMMdd"), lstTrdDay.ToString("yyyyMMdd"), excMax, refRate);
+                 
+                    m_bidAskAlgoP.StartAskBidAlgoOffline(g_bidAskAlgoSymName_cmb.Text, TrdDay.ToString("yyyyMMdd"), g_bidAskTimeToClose_tb.Text, excMax, refRate);
                 }
+
+                g_bisAskAlgoStAnz_bt.Content = "STOP ANALYZE";
             }
         }
 
@@ -224,10 +255,12 @@ namespace SmartTRD
         {
             if (g_bidAskUseRTH_chb.IsChecked == true)
             {
+                g_bidAskTimeToClose_tb.IsEnabled = false;
                 g_bidAskDateFirst_dpc.IsEnabled = false;
             }
             else
             {
+                g_bidAskTimeToClose_tb.IsEnabled = true;
                 g_bidAskDateFirst_dpc.IsEnabled = true;
             }
         }

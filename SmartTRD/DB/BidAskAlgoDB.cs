@@ -23,6 +23,7 @@ namespace SmartTRD.DB
         Dictionary<int, BID_ASK_DB_s> m_bidAskDb;
         int m_currVol;
         double m_closePrice;
+        double m_openPrice;
         double m_bidPrice;
         double m_askPrice;
         Contract m_currContract;
@@ -37,6 +38,7 @@ namespace SmartTRD.DB
             m_closePrice = 0.0;
             m_bidPrice = 0.0;
             m_askPrice = 0.0;
+            m_openPrice = 0.0;
             m_currVol = 0;
             m_instase = this;
         }
@@ -56,9 +58,8 @@ namespace SmartTRD.DB
             m_currContract = null;
             m_lastHisData = new Dictionary<int, List<HistoricalTickLast>>();
             m_bidAskDb = new Dictionary<int, BID_ASK_DB_s>();
-            //m_closePrice = 0.0098;
-            //m_currVol = 111111;
             m_closePrice = 0.0;
+            m_openPrice = 0.0;
             m_currVol = 0;
             m_askPrice = 0.0;
             m_bidPrice = 0.0;
@@ -81,6 +82,10 @@ namespace SmartTRD.DB
         public void SetClosePrice(double clPrice_A)
         {
             m_closePrice = clPrice_A;
+        }
+        public void SetOpenPrice(double openPrice_A)
+        {
+            m_openPrice = openPrice_A;
         }
 
         public void SetBidPrice(double bidPrice_A)
@@ -139,6 +144,12 @@ namespace SmartTRD.DB
             int tempVol = m_currVol * 100;
             m_currVol = 0;
             return tempVol;
+        }
+
+
+        public double GetOpenPrice()
+        {
+            return m_openPrice;
         }
 
         public double GetBidPrice()
@@ -203,6 +214,11 @@ namespace SmartTRD.DB
         public bool ClosePriceAsReceived()
         {
             return m_closePrice != 0;
+        }
+
+        public bool OpenPriceAsReceived()
+        {
+            return m_openPrice != 0;
         }
 
         public bool ContractAsReceived()

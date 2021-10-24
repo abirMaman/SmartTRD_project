@@ -11,6 +11,7 @@ using SmartTRD.DB;
 using SmartTRD.LogHandle;
 using SmartTRD.ReqId;
 using SmartTRD.Scanner;
+using static SmartTRD.ReqId.ReqIdMng;
 
 namespace SmartTRD.IBclient
 {
@@ -117,6 +118,20 @@ namespace SmartTRD.IBclient
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
             LogHandler.WriteToFile("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute +
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
+
+            //switch (m_reqIdMngP.GetActionReqFronDic(tickerId))
+            //{
+            //    case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
+            //        break;
+            //    case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
+            //            if (field == 14)//openPrice
+            //                m_bidAskAlgoDB.SetOpenPrice(price);
+            //        break;
+            //    default:
+            //        break;
+            //}
+
+
         }
         //! [tickprice]
 
@@ -439,7 +454,10 @@ namespace SmartTRD.IBclient
         {
             Console.WriteLine("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
             LogHandler.WriteToFile("HistoricalData. " + reqId + " - Time: " + bar.Time + ", Open: " + bar.Open + ", High: " + bar.High + ", Low: " + bar.Low + ", Close: " + bar.Close + ", Volume: " + bar.Volume + ", Count: " + bar.Count + ", WAP: " + bar.WAP);
-            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
+
+            ACTION_REC_INFO_s reqIdInfo = m_reqIdMngP.GetActionReqInfoFronDic(reqId);
+
+            switch (reqIdInfo.action)
             {
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_NONE:
                     break;
@@ -448,7 +466,20 @@ namespace SmartTRD.IBclient
                     m_stockSckDbP.InsertNetHistoryBarContractToList(stkName, bar);
                     break;
                 case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                    m_bidAskAlgoDB.SetClosePrice(bar.Close);
+                    switch(reqIdInfo.codeAction)
+                    {
+                        case "CLOSE":
+                            m_bidAskAlgoDB.SetClosePrice(bar.Close);
+                            break;
+                        case "OPEN":
+                            if (m_bidAskAlgoDB.OpenPriceAsReceived() == false)
+                                m_bidAskAlgoDB.SetOpenPrice(bar.Open);
+                            break;
+                        default:
+                            break;
+
+                    }
+              
                     //if (reqId == m_bidAskAlgoP.GetAskReqId())
                     //{
                     //    m_bidAskAlgoDB.SetFirstAsk(bar.Close);

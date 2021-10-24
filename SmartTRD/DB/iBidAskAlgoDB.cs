@@ -31,5 +31,8 @@ namespace SmartTRD.DB
         void SetBidPrice(double bidPrice_A);
         void SetAskPrice(double askPrice_A);
         void SetBidAskPriceToDb(int reqId_A, HistoricalTickBidAsk[] bidAsDb_A);
+        bool OpenPriceAsReceived();
+        void SetOpenPrice(double openPrice_A);
+        double GetOpenPrice();
     }
 }
