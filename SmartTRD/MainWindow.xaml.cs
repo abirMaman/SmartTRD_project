@@ -181,18 +181,7 @@ namespace SmartTRD
                     MessageBox.Show("Please insert legall number,for example:500,000", "Error Execption", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                DateTime TrdDay = new DateTime();
-                try
-                {
-                    TrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
-                }
-                catch (Exception e1)
-                {
-                    MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-               
+            
                 int refRate = 0;
                 if( int.TryParse(g_bidAskRefRate_tb.Text,out refRate) == false)
                 {
@@ -205,7 +194,7 @@ namespace SmartTRD
 
 
                     DateTime strTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
-                    16, 30,00);
+                    15, 00,00);
                     DateTime endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
                     23, 05, 00);
 
@@ -215,7 +204,7 @@ namespace SmartTRD
                     }
                     else
                     {
-                        MessageBox.Show("Please wait to 16:30:00 for opening day trade time..", "Error Time", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Please wait to 15:00:00 for opening day trade time..", "Error Time", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
            
@@ -232,6 +221,17 @@ namespace SmartTRD
                     //    MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
                     //    return;
                     //}
+
+                    DateTime TrdDay = new DateTime();
+                    try
+                    {
+                        TrdDay = g_bidAskDateFirst_dpc.SelectedDate.Value;
+                    }
+                    catch (Exception e1)
+                    {
+                        MessageBox.Show("Please insert trade date and try again", "Error Date", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
                     string[] time = g_bidAskTimeToClose_tb.Text.Split(':');
                     int hour, min, sec;

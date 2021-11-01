@@ -116,7 +116,7 @@ namespace SmartTRD.LogHandle
                 m_mutex.ReleaseMutex();
 
                 if(clear)
-                    Thread.Sleep(1500);
+                    Thread.Sleep(100);
 
             }
         }
@@ -158,7 +158,7 @@ namespace SmartTRD.LogHandle
                 }
                 else
                 {
-                    //Thread.Sleep(100);
+                
                 }
 
             }
