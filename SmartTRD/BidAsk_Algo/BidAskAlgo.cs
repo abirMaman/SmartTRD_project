@@ -42,6 +42,7 @@ namespace SmartTRD.BidAsk_Algo
             public long maxTrdBidExc;
             public double diffAskBid;
             public double maxDiffAskBid;
+            public double diffOpenCurr;
         }
 
         struct TRADES_INFO_DB_s
@@ -300,7 +301,7 @@ namespace SmartTRD.BidAsk_Algo
             if (offline_A)
                 stTrd = m_firstTrdData + " 16:31:00";//Get last update from requested date
             else
-                stTrd = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 16, 30, 00).ToString("yyyyMMddW` HH:mm:ss");
+                stTrd = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 16, 31, 00).ToString("yyyyMMdd` HH:mm:ss");
 
             int reqId = m_clientP.GetNextReqId();
             m_reqIdMngP.InsertReqToDic(reqId, ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO,"OPEN");
@@ -772,13 +773,9 @@ namespace SmartTRD.BidAsk_Algo
 
             if (found == false)
             {
-                DateTime closeToEnd = DateTime.Now;
 
-                if (getTimeZone == 3)
-                     closeToEnd = new DateTime(trdTime.Year, trdTime.Month, trdTime.Day, 22, 58, 00);
-                else if(getTimeZone == 2)
-                    closeToEnd = new DateTime(trdTime.Year, trdTime.Month, trdTime.Day, 21, 58, 00);
-
+                DateTime closeToEnd = new DateTime(trdTime.Year, trdTime.Month, trdTime.Day, 22, 58, 00);
+    
                 if (trdTime > closeToEnd)
                     bidAskTime = trdTime.AddSeconds(1);
                 else
@@ -836,6 +833,7 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = "0";
                 m_mainWindowP.g_bidAslAlgoDiff_tb.Text = "0";
                 m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Text = "0.0";
+                m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = "0.0";
 
 
                 //Color GUI
@@ -885,6 +883,7 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_askMaxBidAskAlgo_tb.Text = m_bidAskVolRes.countSizeOfTrdStkAsk.ToString("N", cul).Replace(".00", "") + "/" + m_bidAskVolRes.maxTrdAskExc.ToString("N", cul).Replace(".00", "");
                 m_mainWindowP.g_bidAslAlgoUnreporetd_tb.Text = (m_bidAskVolRes.unreported).ToString("N", cul).Replace(".00", "");
                 m_mainWindowP.g_bidAslAlgolstTrdTime_tb.Text = lstTrdTime_A.ToString("dd.MM.yyyy HH:mm:ss");
+                
 
                 //Color GUI
                 m_mainWindowP.g_askSizeBidAskAlgo_tb.Background = Brushes.White;
@@ -928,18 +927,37 @@ namespace SmartTRD.BidAsk_Algo
                 {
                     m_mainWindowP.g_bidAskAlgoVolDol_tb.Background = Brushes.LightGreen;
                 }
-                if(m_bidAskVolRes.currPrice > m_bidAskVolRes.openPrice)
+    
+                float diffOpenClose = (float)Math.Abs((m_bidAskVolRes.currPrice - m_bidAskVolRes.openPrice));
+                int numOfNumAftPn = (diffOpenClose.ToString().Split('.')[1].Length);
+                double resDiffInCom = Math.Round( diffOpenClose * Math.Pow(10.0, (double)numOfNumAftPn));
+                double precDiff = GetPrecentBetweenOpenToCurr(diffOpenClose, m_bidAskVolRes.openPrice);
+                m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = resDiffInCom.ToString();
+
+                if (m_bidAskVolRes.currPrice > m_bidAskVolRes.openPrice)
                 {
+
+                    m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text + " / +" + precDiff.ToString("0.00") + "%";
                     m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Background = Brushes.LightGreen;
                 }
                 else if(m_bidAskVolRes.openPrice > m_bidAskVolRes.currPrice)
                 {
+                    m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text + " / -" + precDiff.ToString("0.00") + "%";
                     m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Background = Brushes.Red;
                     m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Foreground = Brushes.White;
                 }
+
             });
         }
+
+
         private double GetPrecentBetweenBidAsk(long diff_A,long size_A)
+        {
+            double div = (double)((((double)diff_A) / ((double)size_A)) * 100);
+
+            return div;
+        }
+        private double GetPrecentBetweenOpenToCurr(double diff_A, double size_A)
         {
             double div = (double)((((double)diff_A) / ((double)size_A)) * 100);
 

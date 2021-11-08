@@ -7,7 +7,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:SmartTRD"
         mc:Ignorable="d"
-        Title="SMARTRD VER 1.4.1" Background="LightGray" Closing="MetroWindow_Closing_1"  WindowStyle="None"  WindowState="Maximized">
+        Title="SMARTRD VER 1.4.2" Background="LightGray" Closing="MetroWindow_Closing_1"  WindowStyle="None"  WindowState="Maximized">
     <Viewbox>
         <Grid  >
             <Image HorizontalAlignment="Stretch" Source="Images/LogoIcon.gif" Height="78" VerticalAlignment="Stretch" Width="589" Margin="2,15,1372,987"/>
@@ -94,6 +94,8 @@
                                             <TextBox x:Name="g_bidAslAlgoDiff_tb" IsReadOnly="True" FontSize="18" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="53" Margin="63,148,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="203"/>
                                             <Label Content="Open Price : " FontWeight="Bold" HorizontalAlignment="Left" Margin="144,7,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" RenderTransformOrigin="0.522,0.477"/>
                                             <TextBox x:Name="g_bidAslAlgoOpenPrice_tb" Grid.Column="1" Background="LightYellow" HorizontalAlignment="Left" FontSize="18" Height="34" Margin="74,2,0,0" TextWrapping="Wrap" Text="0.0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.263,0.462"/>
+                                            <Label Content="Diff : " FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="432,7,0,0" VerticalAlignment="Top"/>
+                                            <TextBox x:Name="g_bidAslAlgoDiffOpenPrice_tb"  Grid.Column="1" HorizontalAlignment="Left" Height="34" FontSize="18" Margin="473,2,0,0" TextWrapping="Wrap" Text="0.0" VerticalAlignment="Top" Width="172"/>
                                         </Grid>
                                     </GroupBox>
                                     <DataGrid x:Name="g_bidAslAlgoltsltbl_dgv" Grid.Column="1" HorizontalAlignment="Left" Height="445" Margin="730.6,43,0,0" VerticalAlignment="Top" Width="1085"/>
