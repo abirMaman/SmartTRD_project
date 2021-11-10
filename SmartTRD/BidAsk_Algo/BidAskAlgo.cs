@@ -589,8 +589,7 @@ namespace SmartTRD.BidAsk_Algo
                         {
                             string bidAskRes = "";
 
-                            if (hisAsUpdate == false)
-                                hisAsUpdate = true;
+                           
 
                             gloabalCnt++;
 
@@ -603,6 +602,9 @@ namespace SmartTRD.BidAsk_Algo
                                 switch (bidAskRes = CheckIfTradeIsBidOrAsk(bidAskDB, his))
                                 {
                                     case "ASK":
+                                        if (hisAsUpdate == false)
+                                            hisAsUpdate = true;
+
                                         lstTrdTime = trdTime;
                                         LogHandler.WriteToFile("CheckIfTradeIsBidOrAsk() -> return ASK,trd Time : " + trdTime.ToString("yyyyMMdd - HH:mm: ss") +
                                           " trd size : " + his.Size);
@@ -621,6 +623,9 @@ namespace SmartTRD.BidAsk_Algo
                                         }
                                         break;
                                     case "BID":
+                                        if (hisAsUpdate == false)
+                                            hisAsUpdate = true;
+
                                         lstTrdTime = trdTime;
                                         LogHandler.WriteToFile("CheckIfTradeIsBidOrAsk() -> return BID,trd Time : " + trdTime.ToString("yyyyMMdd - HH:mm: ss") +
                                           " trd size : " + his.Size);
