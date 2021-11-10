@@ -185,7 +185,7 @@ namespace SmartTRD
                 int refRate = 0;
                 if( int.TryParse(g_bidAskRefRate_tb.Text,out refRate) == false)
                 {
-                    refRate = 20;
+                    refRate = 10;
                 }
                 if (g_bidAskUseRTH_chb.IsChecked == true)
                 {

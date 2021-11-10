@@ -735,19 +735,6 @@ namespace SmartTRD.IBclient
             string derivSecTypes;
             Console.WriteLine("Symbol Samples. Request Id: {0}", reqId);
 
-
-            switch (m_reqIdMngP.GetActionReqFronDic(reqId))
-            {
-                case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
-                    m_bidAskAlgoDB.SetContract(contractDescriptions[0].Contract);
-                    break;
-                default:
-                    break;
-
-            }
-
-            m_reqIdMngP.RemoveActionFromDic(reqId);
-
             foreach (var contractDescription in contractDescriptions)
             {
                 derivSecTypes = "";
@@ -756,6 +743,24 @@ namespace SmartTRD.IBclient
                     derivSecTypes += derivSecType;
                     derivSecTypes += " ";
                 }
+                ACTION_REC_INFO_s reqIdInfo = m_reqIdMngP.GetActionReqInfoFronDic(reqId);
+
+                switch (reqIdInfo.action)
+                {
+                    case ReqIdMng.ACTION_REQ_e.ACTION_REQ_ASK_BID_ALGO:
+                        if (contractDescription.Contract.Currency == "USD" &&
+                            contractDescription.Contract.SecType == "STK" &&
+                            reqIdInfo.codeAction == contractDescription.Contract.Symbol &&
+                            contractDescription.Contract.PrimaryExch.Contains("PINK"))
+                        {
+                            m_bidAskAlgoDB.SetContract(contractDescription.Contract);
+                        }
+                        break;
+                    default:
+                        break;
+
+                }
+
                 Console.WriteLine("Contract: conId - {0}, symbol - {1}, secType - {2}, primExchange - {3}, currency - {4}, derivativeSecTypes - {5}",
                     contractDescription.Contract.ConId, contractDescription.Contract.Symbol, contractDescription.Contract.SecType,
                     contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes);
@@ -764,6 +769,8 @@ namespace SmartTRD.IBclient
                     contractDescription.Contract.ConId, contractDescription.Contract.Symbol, contractDescription.Contract.SecType,
                     contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes);
             }
+
+            m_reqIdMngP.RemoveActionFromDic(reqId);
         }
         //! [symbolSamples]
 

@@ -7,7 +7,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:SmartTRD"
         mc:Ignorable="d"
-        Title="SMARTRD VER 1.4.2" Background="LightGray" Closing="MetroWindow_Closing_1"  WindowStyle="None"  WindowState="Maximized">
+        Title="SMARTRD VER 1.4.3" Background="LightGray" Closing="MetroWindow_Closing_1"  WindowStyle="None"  WindowState="Maximized">
     <Viewbox>
         <Grid  >
             <Image HorizontalAlignment="Stretch" Source="Images/LogoIcon.gif" Height="78" VerticalAlignment="Stretch" Width="589" Margin="2,15,1372,987"/>
@@ -56,7 +56,7 @@
                                             <Label Content="Day Trade :" FontWeight="Bold" FontSize="14" HorizontalAlignment="Left" Margin="455,34,0,0" VerticalAlignment="Top" Width="84"/>
                                             <DatePicker x:Name="g_bidAskDateFirst_dpc" IsEnabled="False"  HorizontalAlignment="Left" Margin="542,35,0,0" VerticalAlignment="Top" Width="112"/>
                                             <Label Content="Refresh Rate[SEC] : " FontWeight="Bold" HorizontalAlignment="Left" Margin="319,84,0,0" VerticalAlignment="Top"/>
-                                            <TextBox x:Name="g_bidAskRefRate_tb" HorizontalAlignment="Left" Height="23" Margin="433,83,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="37"/>
+                                            <TextBox x:Name="g_bidAskRefRate_tb" HorizontalAlignment="Left" Height="23" Margin="433,83,0,0" TextWrapping="Wrap" Text="10" VerticalAlignment="Top" Width="37"/>
                                             <TextBox x:Name="g_bidAskTimeToClose_tb" IsEnabled="False" HorizontalAlignment="Left" Height="23" Margin="752,35,0,0" TextWrapping="Wrap" Text="23:05:00" VerticalAlignment="Top" Width="89"/>
 
                                         </Grid>
