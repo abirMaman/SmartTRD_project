@@ -647,6 +647,7 @@ namespace SmartTRD.BidAsk_Algo
                                           " trd size : " + his.Size);
                                         break;
                                     case "BREAK":
+                                        lstTrdTime = trdTime;
                                         LogHandler.WriteToFile("CheckIfTradeIsBidOrAsk() -> return BREAK,trd Time : " + trdTime.ToString("yyyyMMdd - HH:mm: ss") +
                                           " trd size : " + his.Size);
                                         m_hisInfo.wakeUpFromTimeOut = true;
@@ -699,10 +700,11 @@ namespace SmartTRD.BidAsk_Algo
             if (lstTrdTime != null)           
             {
                 if ((gloabalCnt >= 1000) ||
-                   ((bidAskDB != null) && (bidAskDB.Length >= 1000)) ||
+                   (breakForBewBidAskReq) ||
                     (offline_A))
                 {
                         m_firstTime = (DateTime)lstTrdTime;
+
                         if (!breakForBewBidAskReq)
                             m_firstTime = m_firstTime.AddSeconds(1);
                         else
@@ -941,10 +943,20 @@ namespace SmartTRD.BidAsk_Algo
                 }
                 try
                 {
+                    double resDiffInCom = 0.0;
+                    double precDiff = 0.0;
                     float diffOpenClose = (float)Math.Abs((m_bidAskVolRes.currPrice - m_bidAskVolRes.openPrice));
-                    int numOfNumAftPn = (diffOpenClose.ToString().Split('.')[1].Length);
-                    double resDiffInCom = Math.Round(diffOpenClose * Math.Pow(10.0, (double)numOfNumAftPn));
-                    double precDiff = GetPrecentBetweenOpenToCurr(diffOpenClose, m_bidAskVolRes.openPrice);
+                    LogHandler.WriteToFile("HandleWithGUI() -> diffOpenClose = " + diffOpenClose);
+                    if (diffOpenClose != 0)
+                    {
+                        int numOfNumAftPn = (diffOpenClose.ToString().Split('.')[1].Length);
+                        resDiffInCom  = Math.Round(diffOpenClose * Math.Pow(10.0, (double)numOfNumAftPn));
+                        precDiff = GetPrecentBetweenOpenToCurr(diffOpenClose, m_bidAskVolRes.openPrice);
+                    }
+                    else
+                    {
+                        resDiffInCom = diffOpenClose;
+                    }
                     m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = resDiffInCom.ToString();
 
                     if (m_bidAskVolRes.currPrice > m_bidAskVolRes.openPrice)
