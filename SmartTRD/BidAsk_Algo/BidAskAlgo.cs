@@ -788,7 +788,7 @@ namespace SmartTRD.BidAsk_Algo
             if (found == false)
             {
 
-                DateTime closeToEnd = new DateTime(trdTime.Year, trdTime.Month, trdTime.Day, 22, 58, 00);
+                DateTime closeToEnd = new DateTime(trdTime.Year, trdTime.Month, trdTime.Day, 22, 53, 00);
     
                 if (trdTime > closeToEnd)
                     bidAskTime = trdTime.AddSeconds(1);
@@ -860,6 +860,8 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidAslAlgoDiff_tb.Foreground = Brushes.Black;
                 m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Background = Brushes.White;
                 m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Foreground = Brushes.Black;
+                m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Background = Brushes.White;
+                m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Foreground = Brushes.Black;
             });
         }
         private void HandleWithGUI(DateTime lstTrdTime_A,bool offlineMode_A)
@@ -908,6 +910,8 @@ namespace SmartTRD.BidAsk_Algo
                 m_mainWindowP.g_bidAslAlgoDiff_tb.Foreground = Brushes.Black;
                 m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Background = Brushes.White;
                 m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Foreground = Brushes.Black;
+                m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Background = Brushes.White;
+                m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Foreground = Brushes.Black;
 
                 if (m_bidAskVolRes.askSize < m_bidAskVolRes.bidSize)
                 {
@@ -968,8 +972,8 @@ namespace SmartTRD.BidAsk_Algo
                     else if (m_bidAskVolRes.openPrice > m_bidAskVolRes.currPrice)
                     {
                         m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text = m_mainWindowP.g_bidAslAlgoDiffOpenPrice_tb.Text + " / -" + precDiff.ToString("0.00") + "%";
-                        m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Background = Brushes.Red;
-                        m_mainWindowP.g_bidAskAlgoCurrPrice_tb.Foreground = Brushes.White;
+                        m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Background = Brushes.Red;
+                        m_mainWindowP.g_bidAslAlgoOpenPrice_tb.Foreground = Brushes.White;
                     }
                 }
                 catch(Exception  e1)
